@@ -18,7 +18,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
 
   let loginUrl;
 
-  if (mentor.stripeAccountId) {
+  if (Object.keys(mentor).indexOf('stripeAccountId') > 0) {
     const account = await stripe.accounts.retrieve(mentor.stripeAccountId);
 
     if (!account.details_submitted) {
