@@ -16,6 +16,8 @@ const stripe = Stripe(
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;
 
+  console.log(mentor)
+
   let loginUrl;
 
   if (Object.keys(mentor).indexOf('stripeAccountId') > 0) {
