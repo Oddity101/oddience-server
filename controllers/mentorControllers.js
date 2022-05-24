@@ -37,7 +37,6 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
     }
 
   }
-  // TODO: Add code to send a notification to the front end that account setup is incomplete
   res.status(200).json({
     success: true,
     mentor: {
@@ -88,7 +87,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
 
       await axios
         .put(
-          `https://sandbox-api.onsched.com/consumer/v1/appointments/${transaction.onSchedAppointmentId}/book`,
+          `https://api.onsched.com/consumer/v1/appointments/${transaction.onSchedAppointmentId}/book`,
           {},
           { headers }
         )
@@ -124,7 +123,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
 
   await axios
     .get(
-      `https://sandbox-api.onsched.com/consumer/v1/availability/182251/${startDate}/${endDate}?resourceId=${mentor.onSchedResourceID}&tzOffset=${tzOffset}&dayAvailability=7`,
+      `https://api.onsched.com/consumer/v1/availability/84325/${startDate}/${endDate}?resourceId=${mentor.onSchedResourceID}&tzOffset=${tzOffset}&dayAvailability=7`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -136,7 +135,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
       const availableTimes = response.data.availableTimes;
 
       // const { data } = await axios.get(
-      //   `https://sandbox-api.onsched.com/consumer/v1/resources/${mentor.onSchedResourceID}`,
+      //   `https://api.onsched.com/consumer/v1/resources/${mentor.onSchedResourceID}`,
       //   {
       //     headers: {
       //       Authorization: `Bearer ${accessToken}`,
@@ -186,7 +185,7 @@ exports.getAllAppointments = catchAsyncErrors(async (req, res, next) => {
   };
 
   await axios
-    .get("https://sandbox-api.onsched.com/consumer/v1/appointments", {
+    .get("https://api.onsched.com/consumer/v1/appointments", {
       headers: headers,
     })
     .then((response) => {
@@ -213,14 +212,14 @@ exports.updateAvailability = catchAsyncErrors(async (req, res, next) => {
   const data = req.body.availability;
   if (req.body.timezoneId) {
     const timeResponse = await axios.put(
-      `https://sandbox-api.onsched.com/setup/v1/resources/${mentor.onSchedResourceID}`,
+      `https://api.onsched.com/setup/v1/resources/${mentor.onSchedResourceID}`,
       { timezoneId: req.body.timezoneId },
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
   }
   // console.log(data)
   const response = await axios.put(
-    `https://sandbox-api.onsched.com/setup/v1/resources/${mentor.onSchedResourceID}/availability`,
+    `https://api.onsched.com/setup/v1/resources/${mentor.onSchedResourceID}/availability`,
     data,
     { headers }
   );
@@ -300,10 +299,10 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
 
   await axios
     .post(
-      `https://sandbox-api.onsched.com/consumer/v1/appointments?completeBooking=IN`,
+      `https://api.onsched.com/consumer/v1/appointments?completeBooking=IN`,
       {
-        locationId: "bbaa9441-b935-4c4a-9a47-8cb4b4e107a2",
-        serviceId: "182251",
+        locationId: "735f246e-7d9e-4af4-953d-4cafe08aeb5f",
+        serviceId: "84325",
         resourceId: mentor.onSchedResourceID,
         email,
         name: `${capitalize(fName)} ${capitalize(lName)}`,
@@ -349,7 +348,6 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           },
         },
       });
-      console.log(session);
       transaction.stripeTransactionId = session.id;
       transaction.stripePaymentIntent = session.payment_intent;
       await transaction.save();

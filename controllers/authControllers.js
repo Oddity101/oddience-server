@@ -57,8 +57,8 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
 
   await axios
     .post(
-      "https://sandbox-api.onsched.com/setup/v1/resources",
-      { name, email, serviceIds: ["182251"] },
+      "https://api.onsched.com/setup/v1/resources",
+      { name, email, serviceIds: ["84325"] },
       { headers }
     )
     .then(async (response) => {
@@ -88,11 +88,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
       console.log(err);
     });
 
-  // res.status(200).json({
-  //   success: true,
-  //   message: "Successfully created user",
-  //   params,
-  // });
+
 });
 
 // /api/v1/mentor/login
@@ -115,12 +111,7 @@ exports.mentorLogin = catchAsyncErrors(async (req, res, next) => {
   );
 
   sendJwt(mentor, 200, res, params);
-  // res.status(200).json({
-  //   success: true,
-  //   message: "Successfully logged in",
-  //   // link: `${process.env.TEST_BASE_URL}/mentor/dashboard?user=${params}`,
-  //   params
-  // });
+
 });
 
 // /api/v1/mentor/linkedIn
