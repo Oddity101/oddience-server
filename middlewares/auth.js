@@ -26,9 +26,9 @@ exports.isAuthenticated = catchAsyncErrors(async (req, res, next) => {
           return next(new ErrorHandler(err.message, 400))
     }
       // console.log((decoded.exp - decoded.iat)/(1000 * 60 * 60))
-      console.log(decoded)
 
       req.user = await Mentor.findById(decoded.id);
+
 
       next();
     }
