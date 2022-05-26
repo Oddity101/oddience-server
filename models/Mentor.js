@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -58,19 +59,29 @@ coachSchema.pre("save", async function () {
 
 coachSchema.methods.getJwtToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_TIME
+    expiresIn: process.env.JWT_EXPIRES_TIME,
   });
-//   return jwt.sign(
-//     {
-//       exp: Math.floor(Date.now() / 1000) + 10,
-//       id: this._id,
-//     },
-//     process.env.JWT_SECRET
-//   );
 };
 
 coachSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Generate reset password token
+coachSchema.methods.getResetPasswordToken = async function () {
+  // Generate token
+  const resetToken = await crypto.randomBytes(20).toString("hex");
+
+  // Hash and set to resetPasswordToken
+  this.resetPasswordToken = await crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // Set resetPasswordExpire
+  this.resetPasswordExpires = Date.now() + 30 * 60 * 1000;
+
+  return resetToken;
 };
 
 module.exports = mongoose.model("mentor", coachSchema);
