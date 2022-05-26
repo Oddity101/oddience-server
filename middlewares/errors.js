@@ -37,7 +37,7 @@ module.exports = (err, req, res, next) => {
       error = new ErrorHandler(message, 500);
     } else {
       console.log(err);
-      console.log(err.code);
+      console.log(err.statusCode);
       error = new ErrorHandler('An error has occured', 500)
     }
 
