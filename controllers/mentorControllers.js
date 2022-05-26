@@ -341,8 +341,8 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
             quantity: 1,
           },
         ],
-        success_url: `https://stellular-mandazi-a2b5b2.netlify.app/mentor?user=${params}&token=${token}`,
-        cancel_url: `https://stellular-mandazi-a2b5b2.netlify.app/mentor?user=${params}&token=${"failed_transaction"}`,
+        success_url: `https://adorable-torte-247a98.netlify.app/mentor?user=${params}&token=${token}`,
+        cancel_url: `https://adorable-torte-247a98.netlify.app/mentor?user=${params}&token=${"failed_transaction"}`,
         payment_intent_data: {
           application_fee_amount: Number(mentor.pricePerSesh) * 10,
           transfer_data: {
@@ -378,8 +378,8 @@ exports.createStripeConnectedAccount = catchAsyncErrors(
 
       const accountLink = await stripe.accountLinks.create({
         account: account.id,
-        refresh_url: `https://stellular-mandazi-a2b5b2.netlify.app/mentor/dashboard`,
-        return_url: `https://stellular-mandazi-a2b5b2.netlify.app/mentor/dashboard`,
+        refresh_url: `https://adorable-torte-247a98.netlify.app/mentor/dashboard`,
+        return_url: `https://adorable-torte-247a98.netlify.app/mentor/dashboard`,
         type: "account_onboarding",
       });
       res.status(200).json({

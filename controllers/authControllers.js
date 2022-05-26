@@ -1,8 +1,11 @@
 const axios = require("axios");
+const crypto = require("crypto");
+const validator = require("validator");
 const qs = require("qs");
 const createSIBContact = require("../utils/createSIBContact");
 const Mentor = require("../models/Mentor");
 const catchAsyncErrors = require("../utils/catchAsyncErrors");
+const sendMail = require("../utils/sendMail");
 const ErrorHandler = require("../utils/ErrorHandler");
 const sendJwt = require("../utils/sendJwt");
 const referralCodes = require("referral-codes");
@@ -47,6 +50,13 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Passwords do not match", 400));
   }
 
+  if (!validator.isStrongPassword(password, {
+    pointsPerUnique: 0,
+    pointsPerRepeat: 0,
+  })){
+    return next(new ErrorHandler("Passwords is not valid", 400));
+  }
+
   const access_token = await authorizeOnSched();
 
   const name = capitalize(firstName) + " " + capitalize(lastName);
@@ -66,7 +76,11 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         length: 10,
       });
 
-      await createSIBContact(email, capitalize(firstName), capitalize(lastName));
+      await createSIBContact(
+        email,
+        capitalize(firstName),
+        capitalize(lastName)
+      );
       const mentor = await Mentor.create({
         firstName,
         lastName,
@@ -87,8 +101,6 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     .catch((err) => {
       console.log(err);
     });
-
-
 });
 
 // /api/v1/mentor/login
@@ -111,7 +123,6 @@ exports.mentorLogin = catchAsyncErrors(async (req, res, next) => {
   );
 
   sendJwt(mentor, 200, res, params);
-
 });
 
 // /api/v1/mentor/linkedIn
@@ -122,7 +133,7 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
     const options = {
       grant_type: "authorization_code",
       code,
-      redirect_uri: "https://stellular-mandazi-a2b5b2.netlify.app",
+      redirect_uri: "https://adorable-torte-247a98.netlify.app",
       client_id: process.env.LINKEDIN_CLIENT_ID,
       client_secret: process.env.LINKEDIN_CLIENT_SECRET,
     };
@@ -179,4 +190,82 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
   } catch (err) {
     console.log(err);
   }
+});
+
+// /api/v1/password/forgot
+exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
+  // Finds a mentor in the database by the email entered
+  const mentor = await Mentor.findOne({ email: req.body.email });
+
+  if (!mentor) {
+    return next(new ErrorHandler("User does not exist", 400));
+  }
+
+  // Gets reset password token from User models
+  const resetToken = await mentor.getResetPasswordToken();
+
+  await mentor.save();
+
+  // Details of the mail to be sent to the user email
+  const mailDetails = {
+    from: `"Oddience" <${process.env.EMAIL_ADDRESS}>`,
+    to: mentor.email,
+    subject: "Reset Password",
+    text: `Hey ${capitalize(
+      mentor.firstName
+    )}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://adorable-torte-247a98.netlify.app/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
+  };
+
+  try {
+    await sendMail(mailDetails);
+    res.status(200).json({
+      success: true,
+    });
+  } catch (err) {
+    console.log(err);
+    return next(new ErrorHandler("An error occurred", 500));
+  }
+});
+
+// /ai/v1/password/reset/:token
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  // Hash incoming token in the request parameters
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+
+  // Checks is passwords match
+  if (password !== confirmPassword) {
+    return next(new ErrorHandler("Passwords do not match", 400));
+  }
+  // Finds a user with the resetPasswordToken
+  const mentor = await Mentor.findOne({
+    resetPasswordToken,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!mentor) {
+    return next(
+      new ErrorHandler(
+        "Reset password link has expired or token is invalid",
+        400
+      )
+    );
+  }
+
+  // Store new PWD in DB
+  mentor.password = password;
+  mentor.resetPasswordToken = null;
+  mentor.resetPasswordExpire = null;
+
+  await mentor.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password successfully changed",
+  });
 });
