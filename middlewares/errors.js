@@ -37,12 +37,14 @@ module.exports = (err, req, res, next) => {
       error = new ErrorHandler(message, 500);
     } else {
       console.log(err);
-      error = new ErrorHandler("An error has occurred", 500);
+      console.log(err.code);
+      error = new ErrorHandler('An error has occured', 500)
     }
 
     res.status(error.statusCode).json({
       success: false,
       message: error.message,
+      statusCode: error.statusCode
     });
   }
 };
