@@ -125,7 +125,7 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
     const options = {
       grant_type: "authorization_code",
       code,
-      redirect_uri: "https://adorable-torte-247a98.netlify.app",
+      redirect_uri: "https://app.oddience.co",
       client_id: process.env.LINKEDIN_CLIENT_ID,
       client_secret: process.env.LINKEDIN_CLIENT_SECRET,
     };
@@ -203,7 +203,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     from: `"Oddience" <${process.env.EMAIL_ADDRESS}>`,
     to: mentor.email,
     subject: "Reset Password",
-    text: `Hey ${capitalize(mentor.firstName)}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://adorable-torte-247a98.netlify.app/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
+    text: `Hey ${capitalize(mentor.firstName)}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://app.oddience.co/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
   };
 
   try {
