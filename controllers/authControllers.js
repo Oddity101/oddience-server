@@ -1,5 +1,6 @@
 const axios = require("axios");
-const crypto = require("crypto")
+const crypto = require("crypto");
+const validator = require("validator");
 const qs = require("qs");
 const createSIBContact = require("../utils/createSIBContact");
 const Mentor = require("../models/Mentor");
@@ -47,6 +48,15 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
 
   if (confirmPassword !== password) {
     return next(new ErrorHandler("Passwords do not match", 400));
+  }
+
+  if (
+    !validator.isStrongPassword(password, {
+      pointsPerUnique: 0,
+      pointsPerRepeat: 0,
+    })
+  ) {
+    return next(new ErrorHandler("Passwords is not valid", 400));
   }
 
   const access_token = await authorizeOnSched();
@@ -203,7 +213,9 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     from: `"Oddience" <${process.env.EMAIL_ADDRESS}>`,
     to: mentor.email,
     subject: "Reset Password",
-    text: `Hey ${capitalize(mentor.firstName)}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://app.oddience.co/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
+    text: `Hey ${capitalize(
+      mentor.firstName
+    )}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://app.oddience.co/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
   };
 
   try {
@@ -232,6 +244,15 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
   if (password !== confirmPassword) {
     return next(new ErrorHandler("Passwords do not match", 400));
   }
+
+  if (
+    !validator.isStrongPassword(password, {
+      pointsPerUnique: 0,
+      pointsPerRepeat: 0,
+    })
+  ) {
+    return next(new ErrorHandler("Passwords is not valid", 400));
+  }
   // Finds a user with the resetPasswordToken
   const mentor = await Mentor.findOne({
     resetPasswordToken,
@@ -246,7 +267,6 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
       )
     );
   }
-
 
   // Store new PWD in DB
   mentor.password = password;
