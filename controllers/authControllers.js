@@ -30,12 +30,17 @@ exports.checkUsername = catchAsyncErrors(async (req, res, next) => {
   const user = await Mentor.findOne({ username: req.body.username });
 
   if (user) {
-    return next(new ErrorHandler("That username is not available. Please try another", 400));
+    return next(
+      new ErrorHandler(
+        "That username is not available. Please try another",
+        400
+      )
+    );
   }
 
   res.status(200).json({
     success: true,
-    message: "Available"
+    message: "Available",
   });
 });
 
@@ -60,6 +65,17 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
   lastName = lastName.trim().toLowerCase();
   email = email.trim();
   bio = bio.trim();
+  username = username.trim();
+
+  if (!username) {
+    return next(new ErrorHandler("Please enter a valid username", 400));
+  }
+
+  const mentorExists = await Mentor.findOne({ username });
+
+  if (mentorExists) {
+    return next(new ErrorHandler("Username is not available", 400));
+  }
 
   if (confirmPassword !== password) {
     return next(new ErrorHandler("Passwords do not match", 400));
@@ -69,7 +85,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     !validator.isStrongPassword(password, {
       pointsPerUnique: 0,
       pointsPerRepeat: 0,
-    })
+    }) || !password.length > 0
   ) {
     return next(new ErrorHandler("Passwords is not valid", 400));
   }
