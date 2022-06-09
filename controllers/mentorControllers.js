@@ -227,7 +227,7 @@ exports.updateAvailability = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// api/v1/mentor/company-stage/:token
+// api/v1/mentor/company-stage/:username
 exports.updateCompanyStage = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;
   mentor.companyStage = req.body.stage;
@@ -269,18 +269,13 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
 
 // /api/v1/mentor/createAppointment
 exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
-  const params = decodeURI(req.params.token).split("-");
   let { fName, lName, email, startDateTime } = req.body;
   fName = fName.trim();
   lName = lName.trim();
   email = email.trim();
-  const lastName = params[0];
-  const uniqueID = params[1];
 
-  const mentor = await Mentor.findOne({
-    lastName,
-    uniqueID,
-  });
+
+  const mentor = await Mentor.findOne({username: req.params.username});
 
   if (!mentor) {
     return next(new ErrorHandler("User not found", 400));
@@ -333,8 +328,8 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
             quantity: 1,
           },
         ],
-        success_url: `https://app.oddience.co/mentor?user=${params}&token=${token}`,
-        cancel_url: `https://app.oddience.co/mentor?user=${params}&token=${"failed_transaction"}`,
+        success_url: `https://app.oddience.co/coach/${req.body.username}?token=${token}`,
+        cancel_url: `https://app.oddience.co/coach/${req.body.username}?token=${"failed_transaction"}`,
         payment_intent_data: {
           application_fee_amount: Number(mentor.pricePerSesh) * 10,
           transfer_data: {
@@ -370,8 +365,8 @@ exports.createStripeConnectedAccount = catchAsyncErrors(
 
       const accountLink = await stripe.accountLinks.create({
         account: account.id,
-        refresh_url: `https://app.oddience.co/mentor/dashboard`,
-        return_url: `https://app.oddience.co/mentor/dashboard`,
+        refresh_url: `https://app.oddience.co/coach/dashboard`,
+        return_url: `https://app.oddience.co/coach/dashboard`,
         type: "account_onboarding",
       });
       res.status(200).json({

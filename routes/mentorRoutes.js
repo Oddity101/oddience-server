@@ -24,7 +24,7 @@ router
   .route("/mentor/profile/update")
   .put(isAuthenticated, updateProfile);
 router.route("/onsched/appointments").get(getAllAppointments);
-router.route("/mentor/appointment/create/:token").post(createAppointment);
+router.route("/mentor/appointment/create/:username").post(createAppointment);
 router.route("/mentor/stripe/connect").get(isAuthenticated, createStripeConnectedAccount)
 
 module.exports = router;
