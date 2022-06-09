@@ -9,7 +9,7 @@ const { default: axios } = require("axios");
 const capitalize = require("../utils/capitalize");
 const Stripe = require("stripe");
 const stripe = Stripe(
-  `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`
+  `${process.env.STRIPE_API_KEY}`
 );
 
 // api/v1/admin/mentor/
