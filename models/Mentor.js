@@ -43,6 +43,10 @@ const coachSchema = new mongoose.Schema({
   ],
   role: String,
   uniqueID: String,
+  username: {
+    type: String,
+    required: true
+  },
   onSchedResourceID: String,
   stripeAccountId: String,
   stripeAccountComplete: Boolean,

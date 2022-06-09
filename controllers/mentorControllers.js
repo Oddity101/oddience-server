@@ -16,8 +16,6 @@ const stripe = Stripe(
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;
 
-  console.log(mentor)
-
   let loginUrl;
 
   if (Object.keys(mentor).indexOf('stripeAccountId') > 0) {
@@ -54,6 +52,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
         ),
       bio: mentor.bio,
       params: `${mentor.lastName}-${mentor.uniqueID}`,
+      username: mentor.username,
       skills: mentor.skills,
       pricePerSesh: mentor.pricePerSesh,
       uniqueID: mentor.uniqueID,
@@ -68,9 +67,8 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-// api/v1/mentor/:token
+// api/v1/mentor/:username
 exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
-  const params = decodeURI(req.params.token).split("-");
   const tzOffset = String(req.query.tzOffset).replace("-", "+");
 
   let transaction;
@@ -104,16 +102,11 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  const lastName = params[0];
-  const uniqueID = params[1];
 
-  const mentor = await Mentor.findOne({
-    lastName,
-    uniqueID,
-  });
+  const mentor = await Mentor.findOne({username: req.params.username});
 
   if (!mentor) {
-    return next(new ErrorHandler("User not found", 400));
+    return next(new ErrorHandler("Mentor does not exist", 400));
   }
 
   const accessToken = await authorizeOnSched();
@@ -161,7 +154,6 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
           bio: mentor.bio,
           skills: mentor.skills,
           pricePerSesh: mentor.pricePerSesh,
-          // uniqueID:mentor.uniqueID,
           resourceID: mentor.onSchedResourceID,
           availableDays,
           availableTimes,

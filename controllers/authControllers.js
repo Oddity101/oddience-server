@@ -12,7 +12,7 @@ const referralCodes = require("referral-codes");
 const capitalize = require("../utils/capitalize");
 const authorizeOnSched = require("../utils/authorizeOnSched");
 
-// api/v1/user/email/check
+// api/v1/user/check/email
 exports.checkEmail = catchAsyncErrors(async (req, res, next) => {
   const user = await Mentor.findOne({ email: req.body.email });
 
@@ -22,6 +22,20 @@ exports.checkEmail = catchAsyncErrors(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+  });
+});
+
+// api/v1/user/check/username
+exports.checkUsername = catchAsyncErrors(async (req, res, next) => {
+  const user = await Mentor.findOne({ username: req.body.username });
+
+  if (user) {
+    return next(new ErrorHandler("That username is not available. Please try another", 400));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Available"
   });
 });
 
@@ -39,6 +53,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     pricePerSesh,
     profileImageUrl,
     linkedInId,
+    username,
   } = req.body;
   // console.log(profileImageUrl)
   firstName = firstName.trim().toLowerCase();
@@ -88,6 +103,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         lastName,
         bio,
         password,
+        username,
         email,
         skills,
         uniqueID: uniqueID[0],

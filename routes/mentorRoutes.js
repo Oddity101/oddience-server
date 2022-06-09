@@ -12,7 +12,7 @@ const {
 const { isAuthenticated } = require("../middlewares/auth");
 const router = express.Router();
 
-router.route("/mentor/:token").get(getMentorDetails);
+router.route("/mentor/:username").get(getMentorDetails);
 router.route("/admin/mentor").get(isAuthenticated, getMentor);
 router
   .route("/mentor/availability")
