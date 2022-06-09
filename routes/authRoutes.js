@@ -2,6 +2,7 @@ const express = require("express");
 const {
   createUser,
   checkEmail,
+  checkUsername,
   mentorLogin,
   getLinkedInDetails,
   forgotPassword,
