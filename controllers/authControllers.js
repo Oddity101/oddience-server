@@ -67,7 +67,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
   bio = bio.trim();
   username = username.trim();
 
-  if (!username) {
+  if (!username || !/^[A-Za-z0-9._~()'!*:@,;+?-]*$/g.test(username)) {
     return next(new ErrorHandler("Please enter a valid username", 400));
   }
 
