@@ -37,7 +37,7 @@ const coachSchema = new mongoose.Schema({
   },
   skills: [
     {
-      type: mongoose.model.ObjectId,
+      type: mongoose.schema.ObjectId,
       ref: "skill",
     },
   ],
