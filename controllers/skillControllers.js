@@ -19,7 +19,7 @@ exports.getAllSkills = catchAsyncErrors(async (req, res, next) => {
   const formSkills = [];
 
   skills.forEach((skill, i) => {
-    formSkills.push({
+    formSkill.push({
       ...skill.formSkills,
       index: i
     });
