@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const mentorRoutes = require('./routes/mentorRoutes');
+const skillRoutes = require('./routes/skillRoutes');
 const errors = require('./middlewares/errors');
 const cookieParser = require('cookie-parser');
 
@@ -14,6 +15,7 @@ app.use(cookieParser())
 
 app.use('/api/v1', authRoutes);
 app.use('/api/v1', mentorRoutes);
+app.use('/api/v1', skillRoutes);
 
 app.use(errors);
 module.exports = app;
