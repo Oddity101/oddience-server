@@ -8,9 +8,7 @@ const authorizeOnSched = require("../utils/authorizeOnSched");
 const { default: axios } = require("axios");
 const capitalize = require("../utils/capitalize");
 const Stripe = require("stripe");
-const stripe = Stripe(
-  `${process.env.STRIPE_API_KEY}`
-);
+const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
 
 // api/v1/admin/mentor/
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
@@ -18,16 +16,16 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
 
   let loginUrl;
 
-  if (Object.keys(mentor).indexOf('stripeAccountId') > 0) {
+  if (Object.keys(mentor).indexOf("stripeAccountId") > 0) {
     const account = await stripe.accounts.retrieve(mentor.stripeAccountId);
 
     if (!account.details_submitted) {
       mentor.stripeAccountComplete = false;
 
-      await mentor.save()
+      await mentor.save();
     } else {
       mentor.stripeAccountComplete = true;
-      await mentor.save()
+      await mentor.save();
 
       let loginLink = await stripe.accounts.createLoginLink(
         mentor.stripeAccountId
@@ -35,7 +33,6 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
 
       loginUrl = loginLink.url;
     }
-
   }
   res.status(200).json({
     success: true,
@@ -53,7 +50,9 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       bio: mentor.bio,
       params: `${mentor.lastName}-${mentor.uniqueID}`,
       username: mentor.username,
-      skills: mentor.skills,
+      skills: mentor.skills.map((skill) => {
+        return { value: skill.value, label: skill.label };
+      }),
       pricePerSesh: mentor.pricePerSesh,
       uniqueID: mentor.uniqueID,
       resourceID: mentor.onSchedResourceID,
@@ -62,7 +61,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       availability: mentor.availability,
       account_id: mentor.stripeAccountId,
       loginUrl,
-      account_complete: mentor.stripeAccountComplete
+      account_complete: mentor.stripeAccountComplete,
     },
   });
 });
@@ -102,8 +101,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-
-  const mentor = await Mentor.findOne({username: req.params.username});
+  const mentor = await Mentor.findOne({ username: req.params.username });
 
   if (!mentor) {
     return next(new ErrorHandler("Mentor does not exist", 400));
@@ -152,7 +150,9 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
               mentor.lastName[0].toUpperCase()
             ),
           bio: mentor.bio,
-          skills: mentor.skills,
+          skills: mentor.skills.map((skill) => {
+            return { value: skill.value, label: skill.label };
+          }),
           pricePerSesh: mentor.pricePerSesh,
           resourceID: mentor.onSchedResourceID,
           availableDays,
@@ -274,8 +274,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
   lName = lName.trim();
   email = email.trim();
 
-
-  const mentor = await Mentor.findOne({username: req.params.username});
+  const mentor = await Mentor.findOne({ username: req.params.username });
 
   if (!mentor) {
     return next(new ErrorHandler("User not found", 400));
@@ -329,7 +328,9 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           },
         ],
         success_url: `https://app.oddience.co/coach/${req.body.username}?token=${token}`,
-        cancel_url: `https://app.oddience.co/coach/${req.body.username}?token=${"failed_transaction"}`,
+        cancel_url: `https://app.oddience.co/coach/${
+          req.body.username
+        }?token=${"failed_transaction"}`,
         payment_intent_data: {
           application_fee_amount: Number(mentor.pricePerSesh) * 10,
           transfer_data: {
