@@ -91,9 +91,6 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
   ) {
     return next(new ErrorHandler("Passwords is not valid", 400));
   }
-
-  console.log(skills)
-
   const newSkills = skills.filter((skill) => {
     return  typeof skill !== "string";
   });
@@ -101,8 +98,6 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     return typeof skill === "string";
   });
 
-  console.log(newSkills);
-  console.log(skills)
 
   if (newSkills.length > 0) {
     newSkills.forEach(async (skill) => {
@@ -115,6 +110,8 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
       skills.push(newSkill._id);
     });
   }
+
+  console.log(skills)
 
   const access_token = await authorizeOnSched();
 
@@ -135,11 +132,11 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         length: 10,
       });
 
-      await createSIBContact(
-        email,
-        capitalize(firstName),
-        capitalize(lastName)
-      );
+      // await createSIBContact(
+      //   email,
+      //   capitalize(firstName),
+      //   capitalize(lastName)
+      // );
       const mentor = await Mentor.create({
         firstName,
         lastName,
