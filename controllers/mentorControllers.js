@@ -54,7 +54,9 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       bio: mentor.bio,
       params: `${mentor.lastName}-${mentor.uniqueID}`,
       username: mentor.username,
-      skills: activeSkills,
+      skills: activeSkills.map((skill) => {
+        return skill.formSkill;
+      }),
       pricePerSesh: mentor.pricePerSesh,
       uniqueID: mentor.uniqueID,
       resourceID: mentor.onSchedResourceID,
@@ -154,7 +156,9 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
               mentor.lastName[0].toUpperCase()
             ),
           bio: mentor.bio,
-          skills: activeSkills,
+          skills: activeSkills.map((skill) => {
+            return skill.formSkill;
+          }),
           pricePerSesh: mentor.pricePerSesh,
           resourceID: mentor.onSchedResourceID,
           availableDays,
