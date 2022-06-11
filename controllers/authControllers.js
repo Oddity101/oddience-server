@@ -111,8 +111,6 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     });
   }
 
-  console.log(skills)
-
   const access_token = await authorizeOnSched();
 
   const name = capitalize(firstName) + " " + capitalize(lastName);

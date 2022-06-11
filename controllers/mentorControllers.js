@@ -34,6 +34,10 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       loginUrl = loginLink.url;
     }
   }
+
+  const activeSkills = mentor.skills.filter((skill) => {
+    return skill.status === "active";
+  });
   res.status(200).json({
     success: true,
     mentor: {
@@ -50,11 +54,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       bio: mentor.bio,
       params: `${mentor.lastName}-${mentor.uniqueID}`,
       username: mentor.username,
-      skills: mentor.skills.map((skill) => {
-        if(skill.status === "active"){
-          return skill.formSkill;
-        }
-      }),
+      skills: activeSkills,
       pricePerSesh: mentor.pricePerSesh,
       uniqueID: mentor.uniqueID,
       resourceID: mentor.onSchedResourceID,
@@ -137,7 +137,9 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
       //     },
       //   }
       // );
-
+      const activeSkills = mentor.skills.filter((skill) => {
+        return skill.status === "active";
+      });
       res.status(200).json({
         success: true,
         mentor: {
@@ -152,9 +154,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
               mentor.lastName[0].toUpperCase()
             ),
           bio: mentor.bio,
-          skills: mentor.skills.map((skill) => {
-            return { value: skill.value, label: skill.label };
-          }),
+          skills: activeSkills,
           pricePerSesh: mentor.pricePerSesh,
           resourceID: mentor.onSchedResourceID,
           availableDays,
@@ -253,7 +253,7 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
 
   if (req.query.skills) {
     const newSkills = req.query.skills.filter((skill) => {
-      return  typeof skill !== "string";
+      return typeof skill !== "string";
     });
     const skills = req.query.skillsskills.filter((skill) => {
       return typeof skill === "string";
@@ -266,7 +266,7 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
           createdBy: email,
           formSkill: skill,
         });
-  
+
         skills.push(newSkill._id);
       });
     }
