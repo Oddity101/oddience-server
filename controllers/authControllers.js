@@ -95,7 +95,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
   console.log(skills)
 
   const newSkills = skills.filter((skill) => {
-    return  !typeof skill === "string";
+    return  typeof skill !== "string";
   });
   skills = skills.filter((skill) => {
     return typeof skill === "string";
