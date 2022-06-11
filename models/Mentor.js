@@ -45,7 +45,11 @@ const coachSchema = new mongoose.Schema({
   uniqueID: String,
   username: {
     type: String,
-    required: true
+    required: true,
+  },
+  dateCreated: {
+    type: Date,
+    default: new Date(Date.now()),
   },
   onSchedResourceID: String,
   stripeAccountId: String,

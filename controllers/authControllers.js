@@ -109,7 +109,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         formSkill: skill,
       });
 
-      newSkill.push(newSkill._id);
+      skills.push(newSkill._id);
     });
   }
 
