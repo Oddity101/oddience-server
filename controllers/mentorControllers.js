@@ -259,7 +259,7 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
     const newSkills = req.body.skills.filter((skill) => {
       return typeof skill !== "string";
     });
-    const skills = req.body.skillsskills.filter((skill) => {
+    const skills = req.body.skills.filter((skill) => {
       return typeof skill === "string";
     });
 
