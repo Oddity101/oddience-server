@@ -1,6 +1,7 @@
 const qs = require("qs");
 const crypto = require("crypto");
 const Mentor = require("../models/Mentor");
+const Skill = require("../models/Skill");
 const Transaction = require("../models/Transaction");
 const catchAsyncErrors = require("../utils/catchAsyncErrors");
 const ErrorHandler = require("../utils/ErrorHandler");
