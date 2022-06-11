@@ -268,7 +268,7 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
       newSkills.forEach(async (skill) => {
         const newSkill = await Skill.create({
           skill: skill.value,
-          createdBy: email,
+          createdBy: mentor.email,
           formSkill: skill,
         });
 
