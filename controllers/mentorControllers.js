@@ -256,10 +256,10 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
   }
 
   if (req.query.skills) {
-    const newSkills = req.query.skills.filter((skill) => {
+    const newSkills = req.body.skills.filter((skill) => {
       return typeof skill !== "string";
     });
-    const skills = req.query.skillsskills.filter((skill) => {
+    const skills = req.body.skillsskills.filter((skill) => {
       return typeof skill === "string";
     });
 
