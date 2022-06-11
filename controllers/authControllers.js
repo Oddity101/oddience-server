@@ -93,14 +93,14 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
   }
 
   const newSkills = skills.filter((skill) => {
-    return skill.new;
+    return  !typeof skill === "string";
   });
   skills = skills.filter((skill) => {
-    return skill.new === "string";
+    return typeof skill === "string";
   });
 
   console.log(newSkills);
-  console.log(skills);
+  console.log(skills)
 
   if (newSkills.length > 0) {
     newSkills.forEach(async (skill) => {
