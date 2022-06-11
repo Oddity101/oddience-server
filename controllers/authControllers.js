@@ -100,6 +100,8 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     return typeof skill === "object";
   });
 
+  console.log(newSkills)
+
   if (newSkills.length > 0) {
     newSkills.forEach(async skill => {
       const newSkill = await Skill.create({
