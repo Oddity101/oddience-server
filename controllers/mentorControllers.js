@@ -51,7 +51,9 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       params: `${mentor.lastName}-${mentor.uniqueID}`,
       username: mentor.username,
       skills: mentor.skills.map((skill) => {
-        return skill.formSkill;
+        if(skill.status === "active"){
+          return skill.formSkill;
+        }
       }),
       pricePerSesh: mentor.pricePerSesh,
       uniqueID: mentor.uniqueID,
@@ -250,7 +252,26 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
   }
 
   if (req.query.skills) {
-    mentor.skills = req.body.skills;
+    const newSkills = req.query.skills.filter((skill) => {
+      return  typeof skill !== "string";
+    });
+    const skills = req.query.skillsskills.filter((skill) => {
+      return typeof skill === "string";
+    });
+
+    if (newSkills.length > 0) {
+      newSkills.forEach(async (skill) => {
+        const newSkill = await Skill.create({
+          skill: skill.value,
+          createdBy: email,
+          formSkill: skill,
+        });
+  
+        skills.push(newSkill._id);
+      });
+    }
+
+    mentor.skills = skills;
   }
 
   if (req.query.price) {
