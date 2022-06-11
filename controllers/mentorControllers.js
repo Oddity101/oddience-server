@@ -14,8 +14,6 @@ const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;
 
-  console.log(mentor.skills)
-
   let loginUrl;
 
   if (Object.keys(mentor).indexOf("stripeAccountId") > 0) {
@@ -53,7 +51,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       params: `${mentor.lastName}-${mentor.uniqueID}`,
       username: mentor.username,
       skills: mentor.skills.map((skill) => {
-        return { value: skill.value, label: skill.label };
+        return skill.formSkill;
       }),
       pricePerSesh: mentor.pricePerSesh,
       uniqueID: mentor.uniqueID,
