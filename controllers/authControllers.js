@@ -92,6 +92,8 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Passwords is not valid", 400));
   }
 
+  console.log(skills)
+
   const newSkills = skills.filter((skill) => {
     return  !typeof skill === "string";
   });
