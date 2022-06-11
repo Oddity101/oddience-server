@@ -4,6 +4,7 @@ const validator = require("validator");
 const qs = require("qs");
 const createSIBContact = require("../utils/createSIBContact");
 const Mentor = require("../models/Mentor");
+const Skill = require("../models/Skill");
 const catchAsyncErrors = require("../utils/catchAsyncErrors");
 const sendMail = require("../utils/sendMail");
 const ErrorHandler = require("../utils/ErrorHandler");
@@ -85,9 +86,31 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     !validator.isStrongPassword(password, {
       pointsPerUnique: 0,
       pointsPerRepeat: 0,
-    }) || !password.length > 0
+    }) ||
+    !password.length > 0
   ) {
     return next(new ErrorHandler("Passwords is not valid", 400));
+  }
+
+  skills = skills.filter((skill) => {
+    return typeof skill === "string";
+  });
+
+  const newSkills = skills.filter((skill) => {
+    return typeof skill === "object";
+  });
+
+  if (newSkills.length > 0) {
+    newSkills.forEach(async skill => {
+      const newSkill = await Skill.create({
+        skill: skill.value,
+        createdBy: email,
+        formSkill: skill,
+      });
+
+      newSkill.push(newSkill._id)
+    })
+      
   }
 
   const access_token = await authorizeOnSched();
