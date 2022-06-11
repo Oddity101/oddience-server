@@ -5,7 +5,7 @@ const skillSchema = new mongoose.Schema({
   skill: {
     type: String,
     required: true,
-    unique: true,
+    // unique: true,
   },
   formSkill: {
     value: String,
