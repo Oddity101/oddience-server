@@ -93,7 +93,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
   }
 
   const newSkills = skills.filter((skill) => {
-    return typeof skill === "object";
+    return typeof skill !== "string";
   });
   skills = skills.filter((skill) => {
     return typeof skill === "string";
