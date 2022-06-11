@@ -14,6 +14,8 @@ const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;
 
+  console.log(mentor.skills)
+
   let loginUrl;
 
   if (Object.keys(mentor).indexOf("stripeAccountId") > 0) {
