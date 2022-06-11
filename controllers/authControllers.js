@@ -92,27 +92,25 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Passwords is not valid", 400));
   }
 
+  const newSkills = skills.filter((skill) => {
+    return typeof skill === "object";
+  });
   skills = skills.filter((skill) => {
     return typeof skill === "string";
   });
 
-  const newSkills = skills.filter((skill) => {
-    return typeof skill === "object";
-  });
-
-  console.log(newSkills)
+  console.log(newSkills);
 
   if (newSkills.length > 0) {
-    newSkills.forEach(async skill => {
+    newSkills.forEach(async (skill) => {
       const newSkill = await Skill.create({
         skill: skill.value,
         createdBy: email,
         formSkill: skill,
       });
 
-      newSkill.push(newSkill._id)
-    })
-      
+      newSkill.push(newSkill._id);
+    });
   }
 
   const access_token = await authorizeOnSched();
