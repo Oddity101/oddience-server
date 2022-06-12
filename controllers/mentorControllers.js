@@ -106,7 +106,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  const mentor = await Mentor.findOne({ username: req.params.username });
+  const mentor = await Mentor.findOne({ username: req.params.username }).populate('skills');
 
   if (!mentor) {
     return next(new ErrorHandler("Mentor does not exist", 400));
@@ -240,8 +240,6 @@ exports.updateCompanyStage = catchAsyncErrors(async (req, res, next) => {
   mentor.companyStage = req.body.stage;
 
   await mentor.save();
-
-  console.log(mentor);
 
   res.status(200).json({
     success: true,
