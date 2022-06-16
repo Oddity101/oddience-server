@@ -44,7 +44,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
 
   await axios
     .get(
-      `https://api.onsched.com/setup/v1/resources/${user.onSchedResourceID}`,
+      `https://api.onsched.com/setup/v1/resources/${mentor.onSchedResourceID}`,
       {
         headers: {
           Authorization: `Bearer ${access_token}`,
@@ -453,14 +453,14 @@ exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
       if (response.data.googleCalendarAuthUrl.length > 0) {
         return res.status(200).json({
           success: true,
-          url: googleCalendarAuthUrl,
+          url: response.data.googleCalendarAuthUrl,
         });
       }
 
       if (response.data.outlookCalendarAuthUrl.length > 0) {
         return res.status(200).json({
           success: true,
-          url: outlookCalendarAuthUrl,
+          url: response.data.outlookCalendarAuthUrl,
         });
       }
     });
