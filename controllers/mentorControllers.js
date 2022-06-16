@@ -81,7 +81,9 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           loginUrl,
           account_complete: mentor.stripeAccountComplete,
           googleCalendarAuthorized: response.data.googleCalendarAuthorized,
+          googleCalendarId: response.data.googleCalendarId,
           outlookCalendarAuthorized: response.data.outlookCalendarAuthorized,
+          outlookCalendarId: response.data.outlookCalendarId
         },
       });
     });
