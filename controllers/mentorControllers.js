@@ -39,36 +39,52 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const activeSkills = mentor.skills.filter((skill) => {
     return skill.status === "active";
   });
-  res.status(200).json({
-    success: true,
-    mentor: {
-      name:
-        mentor.firstName.replace(
-          mentor.firstName[0],
-          mentor.firstName[0].toUpperCase()
-        ) +
-        " " +
-        mentor.lastName.replace(
-          mentor.lastName[0],
-          mentor.lastName[0].toUpperCase()
-        ),
-      bio: mentor.bio,
-      params: `${mentor.lastName}-${mentor.uniqueID}`,
-      username: mentor.username,
-      skills: activeSkills.map((skill) => {
-        return skill.formSkill;
-      }),
-      pricePerSesh: mentor.pricePerSesh,
-      uniqueID: mentor.uniqueID,
-      resourceID: mentor.onSchedResourceID,
-      stage: mentor.companyStage,
-      imageUrl: mentor.profileImageUrl,
-      availability: mentor.availability,
-      account_id: mentor.stripeAccountId,
-      loginUrl,
-      account_complete: mentor.stripeAccountComplete,
-    },
-  });
+
+  const access_token = await authorizeOnSched();
+
+  await axios
+    .get(
+      `https://api.onsched.com/setup/v1/resources/${user.onSchedResourceID}`,
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      }
+    )
+    .then((response) => {
+      res.status(200).json({
+        success: true,
+        mentor: {
+          name:
+            mentor.firstName.replace(
+              mentor.firstName[0],
+              mentor.firstName[0].toUpperCase()
+            ) +
+            " " +
+            mentor.lastName.replace(
+              mentor.lastName[0],
+              mentor.lastName[0].toUpperCase()
+            ),
+          bio: mentor.bio,
+          params: `${mentor.lastName}-${mentor.uniqueID}`,
+          username: mentor.username,
+          skills: activeSkills.map((skill) => {
+            return skill.formSkill;
+          }),
+          pricePerSesh: mentor.pricePerSesh,
+          uniqueID: mentor.uniqueID,
+          resourceID: mentor.onSchedResourceID,
+          stage: mentor.companyStage,
+          imageUrl: mentor.profileImageUrl,
+          availability: mentor.availability,
+          account_id: mentor.stripeAccountId,
+          loginUrl,
+          account_complete: mentor.stripeAccountComplete,
+          googleCalendarAuthorized: response.body.googleCalendarAuthorized,
+          outlookCalendarAuthorized: response.body.outlookCalendarAuthorized,
+        },
+      });
+    });
 });
 
 // api/v1/mentor/:username
@@ -419,31 +435,33 @@ exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
     outlookCalendarId,
   };
 
-  await axios.put(
-    `https://api.onsched.com/setup/v1/resources/${
-      user.onSchedResourceID
-    }?${req.body.calendar.toLowerCase()}AuthReturnUrl=http%3A%2F%2Flocalhost%3A3000%2Fcoach%2Fdashboard`,
-    {
-      options,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
+  await axios
+    .put(
+      `https://api.onsched.com/setup/v1/resources/${
+        user.onSchedResourceID
+      }?${req.body.calendar.toLowerCase()}AuthReturnUrl=http%3A%2F%2Flocalhost%3A3000%2Fcoach%2Fdashboard`,
+      {
+        options,
       },
-    }
-  ).then(response => {
-    if(response.data.googleCalendarAuthUrl.length > 0) {
-      return res.status(200).json({
-        success: true,
-        url: googleCalendarAuthUrl
-      })
-    }
+      {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      }
+    )
+    .then((response) => {
+      if (response.data.googleCalendarAuthUrl.length > 0) {
+        return res.status(200).json({
+          success: true,
+          url: googleCalendarAuthUrl,
+        });
+      }
 
-    if(response.data.outlookCalendarAuthUrl.length > 0) {
-      return res.status(200).json({
-        success: true,
-        url: outlookCalendarAuthUrl
-      })
-    }
-  })
+      if (response.data.outlookCalendarAuthUrl.length > 0) {
+        return res.status(200).json({
+          success: true,
+          url: outlookCalendarAuthUrl,
+        });
+      }
+    });
 });
