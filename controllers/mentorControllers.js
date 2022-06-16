@@ -52,7 +52,6 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       }
     )
     .then((response) => {
-      console.log(response)
       res.status(200).json({
         success: true,
         mentor: {
@@ -81,8 +80,8 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           account_id: mentor.stripeAccountId,
           loginUrl,
           account_complete: mentor.stripeAccountComplete,
-          googleCalendarAuthorized: response.body.googleCalendarAuthorized,
-          outlookCalendarAuthorized: response.body.outlookCalendarAuthorized,
+          googleCalendarAuthorized: response.data.googleCalendarAuthorized,
+          outlookCalendarAuthorized: response.data.outlookCalendarAuthorized,
         },
       });
     });
