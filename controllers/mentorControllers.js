@@ -106,7 +106,9 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
     }
   }
 
-  const mentor = await Mentor.findOne({ username: req.params.username }).populate('skills');
+  const mentor = await Mentor.findOne({
+    username: req.params.username,
+  }).populate("skills");
 
   if (!mentor) {
     return next(new ErrorHandler("Mentor does not exist", 400));
@@ -403,3 +405,45 @@ exports.createStripeConnectedAccount = catchAsyncErrors(
     }
   }
 );
+
+// /api/v1/mentor/calendar/sync
+exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
+  const user = req.user;
+
+  const access_token = await authorizeOnSched();
+  const googleCalendarId = req.body.googleCalendarId;
+  const outlookCalendarId = req.body.outlookCalendarId;
+
+  const options = {
+    googleCalendarId,
+    outlookCalendarId,
+  };
+
+  await axios.put(
+    `https://api.onsched.com/setup/v1/resources/${
+      user.onSchedResourceID
+    }?${req.body.calendar.toLowerCase()}AuthReturnUrl=http%3A%2F%2Flocalhost%3A3000%2Fcoach%2Fdashboard`,
+    {
+      options,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    }
+  ).then(response => {
+    if(response.data.googleCalendarAuthUrl.length > 0) {
+      return res.status(200).json({
+        success: true,
+        url: googleCalendarAuthUrl
+      })
+    }
+
+    if(response.data.outlookCalendarAuthUrl.length > 0) {
+      return res.status(200).json({
+        success: true,
+        url: outlookCalendarAuthUrl
+      })
+    }
+  })
+});
