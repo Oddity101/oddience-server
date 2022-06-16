@@ -25,6 +25,6 @@ router
   .get(isAuthenticated, createStripeConnectedAccount);
 router
   .route("/mentor/calendar/sync")
-  .get(isAuthenticated, syncExternalCalendar);
+  .put(isAuthenticated, syncExternalCalendar);
 
 module.exports = router;
