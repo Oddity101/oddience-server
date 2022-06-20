@@ -13,7 +13,7 @@ const transactionSchema = new mongoose.Schema({
   },
   mentor: {
     type: mongoose.Schema.ObjectId,
-    ref: 'mentor'
+    ref: "mentor",
   },
   token: {
     type: String,
@@ -21,7 +21,7 @@ const transactionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    default: 'pending'
+    default: "pending",
   },
   dateInitialized: {
     type: Date,
@@ -29,8 +29,9 @@ const transactionSchema = new mongoose.Schema({
   },
   onSchedAppointmentId: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
+  medium: String,
 });
 
 module.exports = mongoose.model("transaction", transactionSchema);

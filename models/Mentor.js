@@ -42,6 +42,8 @@ const coachSchema = new mongoose.Schema({
     },
   ],
   role: String,
+  bookings: Number,
+  transactions: mongoose.Schema.Types.Mixed,
   uniqueID: String,
   username: {
     type: String,
@@ -54,6 +56,28 @@ const coachSchema = new mongoose.Schema({
   onSchedResourceID: String,
   stripeAccountId: String,
   stripeAccountComplete: Boolean,
+  usingFlutterwave: {
+    type: Boolean,
+    default: false,
+  },
+  flutterwaveBankDetails: {
+    accNo: String,
+    accBalance: Number,
+    country: String,
+    bank: {
+      id: Number,
+      code: String,
+      name: String,
+    },
+    branch: {
+      bank_id: Number,
+      bic: mongoose.Schema.Types.Mixed,
+      branch_code: String,
+      branch_name: String,
+      id: Number,
+      swift_code: mongoose.Schema.Types.Mixed,
+    },
+  },
   companyStage: {},
   profileImageUrl: String,
   availability: {},

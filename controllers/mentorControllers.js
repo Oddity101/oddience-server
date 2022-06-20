@@ -1,4 +1,5 @@
 const qs = require("qs");
+const referralCodes = require("referral-codes");
 const crypto = require("crypto");
 const Mentor = require("../models/Mentor");
 const Skill = require("../models/Skill");
@@ -83,7 +84,9 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           googleCalendarAuthorized: response.data.googleCalendarAuthorized,
           googleCalendarId: response.data.googleCalendarId,
           outlookCalendarAuthorized: response.data.outlookCalendarAuthorized,
-          outlookCalendarId: response.data.outlookCalendarId
+          outlookCalendarId: response.data.outlookCalendarId,
+          flutterwaveBankDetails: mentor.flutterwaveBankDetails,
+          usingFlutterwave: mentor.usingFlutterwave,
         },
       });
     });
@@ -187,6 +190,8 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
           stage: mentor.companyStage,
           imageUrl: mentor.profileImageUrl,
           account_id: mentor.stripeAccountId,
+          account_complete: mentor.stripeAccountComplete,
+          usingFlutterwave: mentor.usingFlutterwave,
           appointmentError,
           transaction,
         },
@@ -347,48 +352,88 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
     )
     .then(async (response) => {
       // return console.log(response.data)
-      const token = await crypto.randomBytes(20).toString("hex");
+      const token = await referralCodes.generate({
+        prefix: "odd_tx_",
+        length: 10,
+      })[0];
       const transaction = await Transaction.create({
         customerName: fName + " " + lName,
         token,
         mentor: mentor._id,
         onSchedAppointmentId: response.data.id,
       });
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        mode: "payment",
-        line_items: [
+      let flwResponse;
+      if (req.query.flutterwave) {
+        transaction.medium = "flutterwave";
+
+        const data = {
+          tx_ref: token,
+          amount: mentor.pricePerSesh,
+          currency: "USD",
+          redirect_url: `https://app.oddience.co/coach/${mentor.username}?token=${token}`,
+          customer: {
+            email,
+            name: `${capitalize(fName)} ${capitalize(lName)}}`,
+          },
+          customizations: {
+            title: "Oddience",
+            logo: "https://res.cloudinary.com/oddience/image/upload/v1655762774/header-logo_ej49wh.png",
+          },
+        };
+
+        flwResponse = await axios.post(
+          "https://api.flutterwave.com/v3/payments",
+          { ...data },
           {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: `Oddience Mentoring Session with ${capitalize(
-                  mentor.firstName
-                )} ${capitalize(mentor.lastName)}`,
-              },
-              unit_amount: Number(mentor.pricePerSesh) * 100,
+            headers: {
+              Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
             },
-            quantity: 1,
+          }
+        );
+        await transaction.save();
+
+        res.status(200).json({
+          success: true,
+          url: flwResponse.data.data.link,
+        });
+      } else {
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          mode: "payment",
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: `Oddience Mentoring Session with ${capitalize(
+                    mentor.firstName
+                  )} ${capitalize(mentor.lastName)}`,
+                },
+                unit_amount: Number(mentor.pricePerSesh) * 100,
+              },
+              quantity: 1,
+            },
+          ],
+          success_url: `https://app.oddience.co/coach/${req.body.username}?token=${token}`,
+          cancel_url: `https://app.oddience.co/coach/${
+            req.body.username
+          }?token=${"failed_transaction"}`,
+          payment_intent_data: {
+            application_fee_amount: Number(mentor.pricePerSesh) * 10,
+            transfer_data: {
+              destination: mentor.stripeAccountId,
+            },
           },
-        ],
-        success_url: `https://app.oddience.co/coach/${req.body.username}?token=${token}`,
-        cancel_url: `https://app.oddience.co/coach/${
-          req.body.username
-        }?token=${"failed_transaction"}`,
-        payment_intent_data: {
-          application_fee_amount: Number(mentor.pricePerSesh) * 10,
-          transfer_data: {
-            destination: mentor.stripeAccountId,
-          },
-        },
-      });
-      transaction.stripeTransactionId = session.id;
-      transaction.stripePaymentIntent = session.payment_intent;
-      await transaction.save();
-      res.status(200).json({
-        success: true,
-        url: session.url,
-      });
+        });
+        transaction.medium = "stripe";
+        transaction.stripeTransactionId = session.id;
+        transaction.stripePaymentIntent = session.payment_intent;
+        await transaction.save();
+        res.status(200).json({
+          success: true,
+          url: session.url,
+        });
+      }
     })
     .catch((error) => {
       console.log(error);
