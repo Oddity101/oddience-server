@@ -482,11 +482,15 @@ exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
     outlookCalendarId,
   };
 
+  const uri = encodeURIComponent(
+    "https://oddience.herokuapp.com/coach/dashboard"
+  );
+
   await axios
     .put(
       `https://api.onsched.com/setup/v1/resources/${
         user.onSchedResourceID
-      }?${req.body.calendar.toLowerCase()}AuthReturnUrl=http%3A%2F%2Flocalhost%3A3000%2Fcoach%2Fdashboard`,
+      }?${req.body.calendar.toLowerCase()}AuthReturnUrl=${uri}`,
       {
         options,
       },
