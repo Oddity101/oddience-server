@@ -5,7 +5,10 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  stripeTransactionId: {
+  amount: {
+    type: Number,
+  },
+  transactionId: {
     type: String,
   },
   stripePaymentIntent: {

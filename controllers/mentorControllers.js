@@ -11,6 +11,11 @@ const { default: axios } = require("axios");
 const capitalize = require("../utils/capitalize");
 const Stripe = require("stripe");
 const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
+const Flutterwave = require("flutterwave-node-v3");
+const flw = new Flutterwave(
+  process.env.FLUTTERWAVE_PUBLIC_KEY,
+  process.env.FLUTTERWAVE_SECRET_KEY
+);
 
 // api/v1/admin/mentor/
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
@@ -35,6 +40,29 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
 
       loginUrl = loginLink.url;
     }
+  }
+
+  if (mentor.lastWithdrawalPending) {
+    const lastWithdrawal = mentor.withdrawals[mentor.withdrawals.length - 1];
+
+    const response = await flw.Transfer.get_a_transfer({
+      id: lastWithdrawal.transactionId,
+    });
+
+    if (response.data.status === "FAILED") {
+      mentor.withdrawals[mentor.withdrawals.length - 1].status = "failed";
+      mentor.lastWithdrawalPending = false;
+      mentor.lastWithdrawalFailed = true;
+    }
+
+    if (response.data.status === "SUCCESSFUL") {
+      mentor.withdrawals[mentor.withdrawals.length - 1].status = "success";
+      mentor.flutterwaveBankDetails.accBalance -= lastWithdrawal.amount;
+      mentor.lastWithdrawalPending = false;
+      mentor.lastWithdrawalFailed = false;
+    }
+
+    await mentor.save();
   }
 
   const activeSkills = mentor.skills.filter((skill) => {
@@ -87,6 +115,8 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           outlookCalendarId: response.data.outlookCalendarId,
           flutterwaveBankDetails: mentor.flutterwaveBankDetails,
           usingFlutterwave: mentor.usingFlutterwave,
+          lastWithdrawalPending: mentor.lastWithdrawalPending,
+          lastWithdrawalFailed: mentor.lastWithdrawalFailed,
         },
       });
     });
@@ -99,10 +129,68 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
   let transaction;
   let appointmentError;
 
+  const mentor = await Mentor.findOne({
+    username: req.params.username,
+  }).populate("skills");
+
+  if (!mentor) {
+    return next(new ErrorHandler("Mentor does not exist", 400));
+  }
+
   if (req.query.token && req.query.token !== "failed_transcaction") {
     transaction = await Transaction.findOne({
       token: req.query.token,
     });
+
+    if (transaction.medium === "flutterwave") {
+      if (
+        req.query.transaction_status === "successful" &&
+        req.query.transaction_id &&
+        transaction.status !== "paid"
+      ) {
+        await flw.Transaction.verify({ id: req.query.transaction_id }).then(
+          async (response) => {
+            const { data } = response;
+
+            if (
+              data.status === "successful" &&
+              data.tx_ref === transaction.token &&
+              data.amount === transaction.amount
+            ) {
+              mentor.flutterwaveBankDetails.accBalance += Number(
+                ((Number(data.amount) - Number(data.app_fee)) * 0.8).toFixed(2)
+              );
+              transaction.status = "paid";
+              await mentor.save();
+              await transaction.save();
+
+              const access_token = await authorizeOnSched();
+              const headers = {
+                Authorization: `Bearer ${access_token}`,
+              };
+
+              await axios
+                .put(
+                  `https://api.onsched.com/consumer/v1/appointments/${transaction.onSchedAppointmentId}/book`,
+                  {},
+                  { headers }
+                )
+                .then(async (response) => {
+                  transaction.status = "paid";
+
+                  await transaction.save();
+                })
+                .catch((err) => {
+                  appointmentError = err;
+                });
+            }
+          }
+        );
+      } else {
+        transaction.status = "failed";
+        await transaction.save();
+      }
+    }
 
     if (transaction.status !== "paid") {
       const access_token = await authorizeOnSched();
@@ -125,14 +213,6 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
           appointmentError = err;
         });
     }
-  }
-
-  const mentor = await Mentor.findOne({
-    username: req.params.username,
-  }).populate("skills");
-
-  if (!mentor) {
-    return next(new ErrorHandler("Mentor does not exist", 400));
   }
 
   const accessToken = await authorizeOnSched();
@@ -243,13 +323,11 @@ exports.updateAvailability = catchAsyncErrors(async (req, res, next) => {
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
   }
-  // console.log(data)
   const response = await axios.put(
     `https://api.onsched.com/setup/v1/resources/${mentor.onSchedResourceID}/availability`,
     data,
     { headers }
   );
-  // console.log(response.data)
 
   mentor.availability = data;
   await mentor.save();
@@ -351,7 +429,6 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
       }
     )
     .then(async (response) => {
-      // return console.log(response.data)
       const token = await referralCodes.generate({
         prefix: "odd_tx_",
         length: 10,
@@ -361,6 +438,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         token,
         mentor: mentor._id,
         onSchedAppointmentId: response.data.id,
+        amount: mentor.pricePerSesh,
       });
       let flwResponse;
       if (req.query.flutterwave) {
@@ -390,6 +468,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
             },
           }
         );
+        transaction.transactionId = flwResponse.data.data.id;
         await transaction.save();
 
         res.status(200).json({

@@ -81,6 +81,20 @@ const coachSchema = new mongoose.Schema({
   companyStage: {},
   profileImageUrl: String,
   availability: {},
+  withdrawals: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "withdrawal",
+    },
+  ],
+  lastWithdrawalPending: {
+    type: Boolean,
+    default: false,
+  },
+  lastWithdrawalFailed: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 coachSchema.pre("save", async function () {
