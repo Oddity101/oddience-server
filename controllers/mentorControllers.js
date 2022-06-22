@@ -191,7 +191,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
       }
     }
 
-    if (transaction.status !== "paid") {
+    if (transaction.status !== "paid" && req.query.token) {
       const access_token = await authorizeOnSched();
       const headers = {
         Authorization: `Bearer ${access_token}`,
