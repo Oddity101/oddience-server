@@ -12,8 +12,10 @@ exports.getAllSkills = catchAsyncErrors(async (req, res, next) => {
     skills = await Skill.find({ status: "reviewing" });
   } else if (req.query.filter === "rejected") {
     skills = await Skill.find({ status: "rejected" });
-  } else {
+  } else if (req.query.filter === "active") {
     skills = await Skill.find({ status: "active" });
+  } else {
+    skills = await Skill.find();
   }
 
   const formSkills = [];
