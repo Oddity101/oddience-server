@@ -454,7 +454,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           },
           customizations: {
             title: "Oddience",
-            logo: "https://res.cloudinary.com/oddience/image/upload/v1655762774/header-logo_ej49wh.png",
+            logo: "https://res.cloudinary.com/oddience/image/upload/v1655921554/logo512_ionvbn.png",
           },
         };
 
@@ -560,9 +560,7 @@ exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
     outlookCalendarId,
   };
 
-  const uri = encodeURIComponent(
-    "https://oddience.herokuapp.com/coach/dashboard"
-  );
+  const uri = encodeURIComponent("https://app.oddience.co/coach/dashboard");
 
   await axios
     .put(
