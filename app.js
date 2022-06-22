@@ -4,6 +4,7 @@ const authRoutes = require("./routes/authRoutes");
 const mentorRoutes = require("./routes/mentorRoutes");
 const skillRoutes = require("./routes/skillRoutes");
 const flutterwaveRoutes = require("./routes/flutterwaveRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const errors = require("./middlewares/errors");
 const cookieParser = require("cookie-parser");
 
@@ -18,6 +19,7 @@ app.use("/api/v1", authRoutes);
 app.use("/api/v1", mentorRoutes);
 app.use("/api/v1", skillRoutes);
 app.use("/api/v1", flutterwaveRoutes);
+app.use("/api/v1", adminRoutes);
 
 app.use(errors);
 module.exports = app;

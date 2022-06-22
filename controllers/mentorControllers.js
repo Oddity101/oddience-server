@@ -13,10 +13,9 @@ const Stripe = require("stripe");
 const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
 const Flutterwave = require("flutterwave-node-v3");
 const flw = new Flutterwave(
-  process.env.FLUTTERWAVE_PUBLIC_KEY,
-  process.env.FLUTTERWAVE_SECRET_KEY
+  `FLWPUBK_TEST-5adf6eef76571dfea7e25bb03b10966e-X`,
+  `FLWSECK_TEST-ea14ce925a08f3cf7e1e2a67bee5650e-X`
 );
-
 // api/v1/admin/mentor/
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;

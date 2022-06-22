@@ -21,7 +21,7 @@ exports.getAllSkills = catchAsyncErrors(async (req, res, next) => {
   skills.forEach((skill, i) => {
     formSkills.push({
       ...skill.formSkill,
-      index: i
+      index: i,
     });
   });
 
@@ -30,6 +30,7 @@ exports.getAllSkills = catchAsyncErrors(async (req, res, next) => {
     count: formSkills.length,
     formSkills,
     skillIds: skills.map((skill) => skill._id),
+    skills,
   });
 });
 
