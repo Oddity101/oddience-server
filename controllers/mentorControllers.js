@@ -12,6 +12,7 @@ const capitalize = require("../utils/capitalize");
 const Stripe = require("stripe");
 const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
 const Flutterwave = require("flutterwave-node-v3");
+const Booking = require("../models/Booking");
 const flw = new Flutterwave(
   `FLWPUBK_TEST-5adf6eef76571dfea7e25bb03b10966e-X`,
   `FLWSECK_TEST-ea14ce925a08f3cf7e1e2a67bee5650e-X`
@@ -80,6 +81,11 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
       }
     )
     .then((response) => {
+      const bookings = mentor.transactions
+        ? mentor.transactions.filter((t) => {
+            return t.status === "paid";
+          }).length
+        : 0;
       res.status(200).json({
         success: true,
         mentor: {
@@ -116,6 +122,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           usingFlutterwave: mentor.usingFlutterwave,
           lastWithdrawalPending: mentor.lastWithdrawalPending,
           lastWithdrawalFailed: mentor.lastWithdrawalFailed,
+          bookings,
         },
       });
     });
@@ -130,7 +137,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
 
   const mentor = await Mentor.findOne({
     username: req.params.username,
-  }).populate("skills");
+  }).populate("skills transactions");
 
   if (!mentor) {
     return next(new ErrorHandler("Mentor does not exist", 400));
@@ -191,7 +198,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
       }
     }
 
-    if (transaction.status !== "paid" && req.query.token) {
+    if (transaction.status !== "paid" && transaction.medium !== "flutterwave") {
       const access_token = await authorizeOnSched();
       const headers = {
         Authorization: `Bearer ${access_token}`,
@@ -245,6 +252,13 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
       const activeSkills = mentor.skills.filter((skill) => {
         return skill.status === "active";
       });
+
+      const bookings = mentor.transactions
+        ? mentor.transactions.filter((t) => {
+            return t.status === "paid";
+          }).length
+        : 0;
+
       res.status(200).json({
         success: true,
         mentor: {
@@ -273,6 +287,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
           usingFlutterwave: mentor.usingFlutterwave,
           appointmentError,
           transaction,
+          bookings,
         },
       });
     })
@@ -439,6 +454,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         onSchedAppointmentId: response.data.id,
         amount: mentor.pricePerSesh,
       });
+      mentor.transactions.push(transaction._id);
       let flwResponse;
       if (req.query.flutterwave) {
         transaction.medium = "flutterwave";

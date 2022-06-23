@@ -42,8 +42,18 @@ const coachSchema = new mongoose.Schema({
     },
   ],
   role: String,
-  bookings: Number,
-  transactions: mongoose.Schema.Types.Mixed,
+  bookings: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "booking",
+    },
+  ],
+  transactions: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "transaction",
+    },
+  ],
   uniqueID: String,
   username: {
     type: String,
