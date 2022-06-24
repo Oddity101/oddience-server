@@ -455,7 +455,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         amount: mentor.pricePerSesh,
       });
       mentor.transactions.push(transaction._id);
-      await transaction.save();
+      await mentor.save();
       let flwResponse;
       if (req.query.flutterwave) {
         transaction.medium = "flutterwave";
