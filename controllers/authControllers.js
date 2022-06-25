@@ -92,12 +92,11 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Passwords is not valid", 400));
   }
   const newSkills = skills.filter((skill) => {
-    return  typeof skill !== "string";
+    return typeof skill !== "string";
   });
   skills = skills.filter((skill) => {
     return typeof skill === "string";
   });
-
 
   if (newSkills.length > 0) {
     newSkills.forEach(async (skill) => {
@@ -148,6 +147,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         onSchedResourceID: response.data.id,
         profileImageUrl,
         linkedInId,
+        role,
       });
 
       const params = encodeURI(`${lastName.toLowerCase()}-${uniqueID[0]}`);
