@@ -265,7 +265,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
   // Integration foor SendGrid Email
   const msg = {
     to: mentor.email,
-    from: "noreply@oddience.co",
+    from: "support@oddience.co",
     subject: "Reset Password",
     template_id: "d-7ba0111ab3a842eeb5288acb037aac98",
     dynamic_template_data: {
