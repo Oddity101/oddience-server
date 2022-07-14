@@ -273,7 +273,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     },
   };
 
-  sgMail
+  await sgMail
     .send(msg)
     .then(() => {
       res.status(200).json({
