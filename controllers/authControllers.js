@@ -1,5 +1,6 @@
 const axios = require("axios");
 const crypto = require("crypto");
+const sgMail = require("@sendgrid/mail");
 const validator = require("validator");
 const qs = require("qs");
 const createSIBContact = require("../utils/createSIBContact");
@@ -12,6 +13,7 @@ const sendJwt = require("../utils/sendJwt");
 const referralCodes = require("referral-codes");
 const capitalize = require("../utils/capitalize");
 const authorizeOnSched = require("../utils/authorizeOnSched");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // api/v1/user/check/email
 exports.checkEmail = catchAsyncErrors(async (req, res, next) => {
@@ -61,7 +63,6 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     linkedInId,
     username,
   } = req.body;
-  // console.log(profileImageUrl)
   firstName = firstName.trim().toLowerCase();
   lastName = lastName.trim().toLowerCase();
   email = email.trim();
@@ -129,11 +130,11 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         length: 10,
       });
 
-      // await createSIBContact(
-      //   email,
-      //   capitalize(firstName),
-      //   capitalize(lastName)
-      // );
+      await createSIBContact(
+        email,
+        capitalize(firstName),
+        capitalize(lastName)
+      );
       const mentor = await Mentor.create({
         firstName,
         lastName,
@@ -261,25 +262,48 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
 
   await mentor.save();
 
-  // Details of the mail to be sent to the user email
-  const mailDetails = {
-    from: `"Oddience" <${process.env.EMAIL_ADDRESS}>`,
+  // Integration foor SendGrid Email
+  const msg = {
     to: mentor.email,
+    from: "noreply@oddience.co",
     subject: "Reset Password",
-    text: `Hey ${capitalize(
-      mentor.firstName
-    )}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://app.oddience.co/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
+    template_id: "d-7ba0111ab3a842eeb5288acb037aac98",
+    dynamic_template_data: {
+      reset_link: `https://app.oddience.co/password/forgot?token=${resetToken}`,
+    },
   };
 
-  try {
-    await sendMail(mailDetails);
-    res.status(200).json({
-      success: true,
+  sgMail
+    .send(msg)
+    .then(() => {
+      res.status(200).json({
+        success: true,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(new ErrorHandler("An error occurred", 500));
     });
-  } catch (err) {
-    console.log(err);
-    return next(new ErrorHandler("An error occurred", 500));
-  }
+
+  // Details of the mail to be sent to the user email
+  // const mailDetails = {
+  //   from: `"Oddience" <${process.env.EMAIL_ADDRESS}>`,
+  //   to: mentor.email,
+  //   subject: "Reset Password",
+  //   text: `Hey ${capitalize(
+  //     mentor.firstName
+  //   )}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://app.oddience.co/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
+  // };
+
+  // try {
+  //   await sendMail(mailDetails);
+  //   res.status(200).json({
+  //     success: true,
+  //   });
+  // } catch (err) {
+  //   console.log(err);
+  //   return next(new ErrorHandler("An error occurred", 500));
+  // }
 });
 
 // /ai/v1/password/reset/:token
