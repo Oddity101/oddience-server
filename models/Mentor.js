@@ -88,6 +88,16 @@ const coachSchema = new mongoose.Schema({
       swift_code: mongoose.Schema.Types.Mixed,
     },
   },
+  paystackBankDetails: {
+    country: String,
+    bank: {},
+    subaccount_details: {
+      business_name: String,
+      accNo: String,
+      subaccount_code: String,
+    },
+  },
+  usingPaystack: Boolean,
   companyStage: {},
   profileImageUrl: String,
   availability: {},

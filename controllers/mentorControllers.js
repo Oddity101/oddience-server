@@ -1,6 +1,4 @@
-const qs = require("qs");
 const referralCodes = require("referral-codes");
-const crypto = require("crypto");
 const Mentor = require("../models/Mentor");
 const Skill = require("../models/Skill");
 const Transaction = require("../models/Transaction");
@@ -9,15 +7,11 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const authorizeOnSched = require("../utils/authorizeOnSched");
 const { default: axios } = require("axios");
 const capitalize = require("../utils/capitalize");
+const sendgridSendMail = require("../utils/sendgridSendMail");
 const Stripe = require("stripe");
 const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
-const Flutterwave = require("flutterwave-node-v3");
-const Booking = require("../models/Booking");
-const flw = new Flutterwave(
-  `FLWPUBK_TEST-5adf6eef76571dfea7e25bb03b10966e-X`,
-  `FLWSECK_TEST-ea14ce925a08f3cf7e1e2a67bee5650e-X`
-);
-// api/v1/admin/mentor/
+const initPaystackTransaction = require("../utils/initPaystackTransaction");
+
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;
 
@@ -119,7 +113,8 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           outlookCalendarAuthorized: response.data.outlookCalendarAuthorized,
           outlookCalendarId: response.data.outlookCalendarId,
           flutterwaveBankDetails: mentor.flutterwaveBankDetails,
-          usingFlutterwave: mentor.usingFlutterwave,
+          usingPaystack: mentor.usingPaystack,
+          paystackBankDetails: mentor.paystackBankDetails,
           lastWithdrawalPending: mentor.lastWithdrawalPending,
           lastWithdrawalFailed: mentor.lastWithdrawalFailed,
           bookings,
@@ -285,6 +280,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
           account_id: mentor.stripeAccountId,
           account_complete: mentor.stripeAccountComplete,
           usingFlutterwave: mentor.usingFlutterwave,
+          usingPaystack: mentor.usingPaystack,
           appointmentError,
           transaction,
           bookings,
@@ -434,7 +430,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         serviceId: "84325",
         resourceId: mentor.onSchedResourceID,
         email,
-        name: `${capitalize(fName)} ${capitalize(lName)}`,
+        name: `${sendgridSendMail(fName)} ${sendgridSendMail(lName)}`,
         startDateTime: new Date(startDateTime).toISOString(),
         endDateTime: new Date(startDateTime + 30 * 60 * 1000).toISOString(),
       },
@@ -487,10 +483,61 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         transaction.transactionId = flwResponse.data.data.id;
         await transaction.save();
 
-        res.status(200).json({
-          success: true,
-          url: flwResponse.data.data.link,
-        });
+        const msg = {
+          to: email,
+          from: "support@oddience.co",
+          subject: "Booking Reserved",
+          template_id: "d-04a786943e6742bea20f25e96aaa64f6",
+          dynamic_template_data: {
+            session_date: new Date(startDateTime).toLocaleDateString(),
+            session_time: new Date(startDateTime).toLocaleTimeString(),
+            coach_first_name: capitalize(mentor.firstName),
+            coach_last_name: capitalize(mentor.lastName),
+          },
+        };
+
+        await sendgridSendMail(msg)
+          .then(() => {
+            res.status(200).json({
+              success: true,
+              url: flwResponse.data.data.link,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            return next(new ErrorHandler("An error occurred", 500));
+          });
+      } else if (req.query.paystack) {
+        const paystackData = await initPaystackTransaction(email, mentor);
+
+        transaction.token = paystackData.ref;
+
+        await transaction.save();
+
+        const msg = {
+          to: email,
+          from: "support@oddience.co",
+          subject: "Booking Reserved",
+          template_id: "d-04a786943e6742bea20f25e96aaa64f6",
+          dynamic_template_data: {
+            session_date: new Date(startDateTime).toLocaleDateString(),
+            session_time: new Date(startDateTime).toLocaleTimeString(),
+            coach_first_name: capitalize(mentor.firstName),
+            coach_last_name: capitalize(mentor.lastName),
+          },
+        };
+
+        await sendgridSendMail(msg)
+          .then(() => {
+            res.status(200).json({
+              success: true,
+              url: paystackData.url,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            return next(new ErrorHandler("An error occurred", 500));
+          });
       } else {
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ["card"],
@@ -524,10 +571,31 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         transaction.stripeTransactionId = session.id;
         transaction.stripePaymentIntent = session.payment_intent;
         await transaction.save();
-        res.status(200).json({
-          success: true,
-          url: session.url,
-        });
+
+        const msg = {
+          to: email,
+          from: "support@oddience.co",
+          subject: "Booking Reserved",
+          template_id: "d-04a786943e6742bea20f25e96aaa64f6",
+          dynamic_template_data: {
+            session_date: new Date(startDateTime).toLocaleDateString(),
+            session_time: new Date(startDateTime).toLocaleTimeString(),
+            coach_first_name: capitalize(mentor.firstName),
+            coach_last_name: capitalize(mentor.lastName),
+          },
+        };
+
+        await sendgridSendMail(msg)
+          .then(() => {
+            res.status(200).json({
+              success: true,
+              url: session.url,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            return next(new ErrorHandler("An error occurred", 500));
+          });
       }
     })
     .catch((error) => {

@@ -13,6 +13,7 @@ const sendJwt = require("../utils/sendJwt");
 const referralCodes = require("referral-codes");
 const capitalize = require("../utils/capitalize");
 const authorizeOnSched = require("../utils/authorizeOnSched");
+const sendgridSendMail = require("../utils/sendgridSendMail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // api/v1/user/check/email
@@ -273,8 +274,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     },
   };
 
-  await sgMail
-    .send(msg)
+  await sendgridSendMail(msg)
     .then(() => {
       res.status(200).json({
         success: true,
