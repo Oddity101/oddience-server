@@ -1,4 +1,5 @@
 const referralCodes = require("referral-codes");
+const moment = require("moment-timezone");
 const Mentor = require("../models/Mentor");
 const Skill = require("../models/Skill");
 const Transaction = require("../models/Transaction");
@@ -224,14 +225,30 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
 
                 await transaction.save();
 
+                const session_date = moment
+                  .tz(
+                    new Date(transaction.date).toLocaleDateString(),
+                    "Africa/Lagos"
+                  )
+                  .format("DD MM YYYY");
+
+                const session_time = new Date(
+                  moment
+                    .tz(
+                      new Date(transaction.date).toLocaleDateString(),
+                      "Africa/Lagos"
+                    )
+                    .format()
+                ).toTimeString();
+
                 const msg = {
                   to: transaction.customerEmail,
                   from: "support@oddience.co",
                   subject: "Booking Confirmed",
                   template_id: "d-1029e5cd14fd4224b459b64a2283dc84",
                   dynamic_template_data: {
-                    session_date: new Date(transaction.date).toDateString(),
-                    session_time: new Date(transaction.date).toTimeString(),
+                    session_date,
+                    session_time,
                     coach_first_name: capitalize(mentor.firstName),
                     coach_last_name: capitalize(mentor.lastName),
                   },
@@ -249,8 +266,8 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   subject: "Booking Confirmed",
                   template_id: "d-0a46ef44506942c88b78672ffe2cd733",
                   dynamic_template_data: {
-                    session_date: new Date(transaction.date).toDateString(),
-                    session_time: new Date(transaction.date).toTimeString(),
+                    session_date,
+                    session_time,
                     coach_first_name: capitalize(mentor.firstName),
                     client_first_name: capitalize(
                       transaction.customerName.split(" ")[0]

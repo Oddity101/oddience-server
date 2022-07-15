@@ -23,7 +23,7 @@ app.use("/api/v1", skillRoutes);
 app.use("/api/v1", flutterwaveRoutes);
 app.use("/api/v1", adminRoutes);
 app.use("/api/v1", paystackRoutes);
-app.use("api/v1", webhooks);
+app.use("/api/v1", webhooks);
 
 app.use(errors);
 module.exports = app;
