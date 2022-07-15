@@ -14,8 +14,6 @@ module.exports = async (email, mentor) => {
 
   amount = (amount * 100).toFixed(0);
 
-  console.log(amount);
-
   let response;
   await axios
     .post(
@@ -37,7 +35,6 @@ module.exports = async (email, mentor) => {
       }
     )
     .then((res) => {
-      console.log(res.data.data);
       response = {
         url: res.data.data.authorization_url,
         ref: res.data.data.reference,

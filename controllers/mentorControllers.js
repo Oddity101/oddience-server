@@ -193,6 +193,87 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
       }
     }
 
+    if (transaction.medium === "paystack" && transaction.status !== "paid") {
+      axios
+        .get(
+          `https://api.paystack.co/transaction/verify/${transaction.token}`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+            },
+          }
+        )
+        .then(async (paystackRes) => {
+          if (
+            paystackRes.data.data.status === "success" &&
+            paystackRes.data.data.reference === transaction.reference
+          ) {
+            const access_token = await authorizeOnSched();
+            const headers = {
+              Authorization: `Bearer ${access_token}`,
+            };
+
+            await axios
+              .put(
+                `https://api.onsched.com/consumer/v1/appointments/${transaction.onSchedAppointmentId}/book`,
+                {},
+                { headers }
+              )
+              .then(async (response) => {
+                transaction.status = "paid";
+
+                await transaction.save();
+
+                const msg = {
+                  to: email,
+                  from: "support@oddience.co",
+                  subject: "Booking Confirmed",
+                  template_id: "d-1029e5cd14fd4224b459b64a2283dc84",
+                  dynamic_template_data: {
+                    session_date: new Date(transaction.date).toDateString(),
+                    session_time: new Date(transaction.date).toTimeString(),
+                    coach_first_name: capitalize(mentor.firstName),
+                    coach_last_name: capitalize(mentor.lastName),
+                  },
+                };
+
+                await sendgridSendMail(msg)
+                  .then(() => {})
+                  .catch((err) => {
+                    console.log(err);
+                  });
+
+                const msgCoach = {
+                  to: mentor.email,
+                  from: "support@oddience.co",
+                  subject: "Booking Confirmed",
+                  template_id: "d-0a46ef44506942c88b78672ffe2cd733",
+                  dynamic_template_data: {
+                    session_date: new Date(transaction.date).toDateString(),
+                    session_time: new Date(transaction.date).toTimeString(),
+                    coach_first_name: capitalize(mentor.firstName),
+                    client_first_name: capitalize(
+                      transaction.customerName.split(" ")[0]
+                    ),
+                    client_last_name: capitalize(
+                      transaction.customerName.split(" ")[1]
+                    ),
+                  },
+                };
+
+                await sendgridSendMail(msgCoach)
+                  .then(() => {})
+                  .catch((err) => {
+                    console.log(err);
+                  });
+              })
+              .catch((err) => {
+                appointmentError = err;
+              });
+          }
+        });
+    }
+
     if (transaction.status !== "paid" && transaction.medium !== "flutterwave") {
       const access_token = await authorizeOnSched();
       const headers = {
@@ -449,6 +530,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         mentor: mentor._id,
         onSchedAppointmentId: response.data.id,
         amount: mentor.pricePerSesh,
+        date: new Date(startDateTime),
       });
       mentor.transactions.push(transaction._id);
       await mentor.save();
@@ -489,8 +571,8 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           subject: "Booking Reserved",
           template_id: "d-04a786943e6742bea20f25e96aaa64f6",
           dynamic_template_data: {
-            session_date: new Date(startDateTime).toLocaleDateString(),
-            session_time: new Date(startDateTime).toLocaleTimeString(),
+            session_date: new Date(startDateTime).toDateString(),
+            session_time: new Date(startDateTime).toTimeString(),
             coach_first_name: capitalize(mentor.firstName),
             coach_last_name: capitalize(mentor.lastName),
           },

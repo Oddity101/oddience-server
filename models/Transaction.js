@@ -26,6 +26,9 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     default: "pending",
   },
+  date: {
+    type: Date,
+  },
   dateInitialized: {
     type: Date,
     default: new Date(Date.now()),
