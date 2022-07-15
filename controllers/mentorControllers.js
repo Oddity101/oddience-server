@@ -620,7 +620,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           .format("DD-MM-YYYY");
 
         const session_time = new Date(
-          moment(new Date(startDate).toISOString()).tz("Africa/Lagos").format()
+          moment(new Date(startDateTime).toISOString()).tz("Africa/Lagos").format()
         ).toTimeString();
 
         const msg = {
