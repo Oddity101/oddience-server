@@ -225,19 +225,15 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
 
                 await transaction.save();
 
-                const session_date = moment
-                  .tz(
-                    new Date(transaction.date).toLocaleDateString(),
-                    "Africa/Lagos"
-                  )
-                  .format("DD MM YYYY");
+                const session_date = moment(
+                  new Date(transaction.date).toLocaleDateString()
+                )
+                  .tz("Africa/Lagos")
+                  .format("DD-MM-YYYY");
 
                 const session_time = new Date(
-                  moment
-                    .tz(
-                      new Date(transaction.date).toLocaleDateString(),
-                      "Africa/Lagos"
-                    )
+                  moment(new Date(transaction.date).toLocaleDateString())
+                    .tz("Africa/Lagos")
                     .format()
                 ).toTimeString();
 
@@ -283,8 +279,6 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   .catch((err) => {
                     console.log(err);
                   });
-
-                console.log("Emails sent here");
               })
               .catch((err) => {
                 appointmentError = err;
