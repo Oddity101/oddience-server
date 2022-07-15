@@ -430,7 +430,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
         serviceId: "84325",
         resourceId: mentor.onSchedResourceID,
         email,
-        name: `${sendgridSendMail(fName)} ${sendgridSendMail(lName)}`,
+        name: `${capitalize(fName)} ${capitalize(lName)}`,
         startDateTime: new Date(startDateTime).toISOString(),
         endDateTime: new Date(startDateTime + 30 * 60 * 1000).toISOString(),
       },
