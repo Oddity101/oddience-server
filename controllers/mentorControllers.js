@@ -226,13 +226,13 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                 await transaction.save();
 
                 const session_date = moment(
-                  new Date(transaction.date).toLocaleDateString()
+                  new Date(transaction.date).toISOString()
                 )
                   .tz("Africa/Lagos")
                   .format("DD-MM-YYYY");
 
                 const session_time = new Date(
-                  moment(new Date(transaction.date).toLocaleDateString())
+                  moment(new Date(transaction.date).toISOString())
                     .tz("Africa/Lagos")
                     .format()
                 ).toTimeString();
