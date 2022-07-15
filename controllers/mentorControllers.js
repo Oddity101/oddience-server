@@ -592,7 +592,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           });
       } else if (req.query.paystack) {
         const paystackData = await initPaystackTransaction(email, mentor);
-
+        transaction.medium = "paystack";
         transaction.token = paystackData.ref;
 
         await transaction.save();
