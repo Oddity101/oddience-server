@@ -206,7 +206,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
         .then(async (paystackRes) => {
           if (
             paystackRes.data.data.status === "success" &&
-            paystackRes.data.data.reference === transaction.reference
+            paystackRes.data.data.reference === transaction.token
           ) {
             const access_token = await authorizeOnSched();
             const headers = {
@@ -219,7 +219,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                 {},
                 { headers }
               )
-              .then(async (response) => {
+              .then(async () => {
                 transaction.status = "paid";
 
                 await transaction.save();
@@ -266,6 +266,8 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   .catch((err) => {
                     console.log(err);
                   });
+
+                console.log("Emails sent here");
               })
               .catch((err) => {
                 appointmentError = err;

@@ -5,6 +5,10 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  customerEmail: {
+    type: String,
+    required: true,
+  },
   amount: {
     type: Number,
   },
