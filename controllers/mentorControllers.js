@@ -281,6 +281,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   });
               })
               .catch((err) => {
+                console.log(err);
                 appointmentError = err;
               });
           }
@@ -614,14 +615,22 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
 
         await transaction.save();
 
+        const session_date = moment(new Date(startDateTime).toISOString())
+          .tz("Africa/Lagos")
+          .format("DD-MM-YYYY");
+
+        const session_time = new Date(
+          moment(new Date(startDate).toISOString()).tz("Africa/Lagos").format()
+        ).toTimeString();
+
         const msg = {
           to: email,
           from: "support@oddience.co",
           subject: "Booking Reserved",
           template_id: "d-04a786943e6742bea20f25e96aaa64f6",
           dynamic_template_data: {
-            session_date: new Date(startDateTime).toLocaleDateString(),
-            session_time: new Date(startDateTime).toLocaleTimeString(),
+            session_date,
+            session_time,
             coach_first_name: capitalize(mentor.firstName),
             coach_last_name: capitalize(mentor.lastName),
           },

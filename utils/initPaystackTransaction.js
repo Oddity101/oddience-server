@@ -26,7 +26,7 @@ module.exports = async (email, mentor) => {
         bearer: "subaccount",
         sub_account:
           mentor.paystackBankDetails.subaccount_details.subaccount_code,
-        callback_url: `http://localhost:3001/coach/${mentor.username}`,
+        callback_url: `https://app.oddience.co/coach/${mentor.username}`,
       },
       {
         headers: {
