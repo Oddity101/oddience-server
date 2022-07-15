@@ -274,7 +274,11 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
         });
     }
 
-    if (transaction.status !== "paid" && transaction.medium !== "flutterwave") {
+    if (
+      transaction.status !== "paid" &&
+      transaction.medium !== "flutterwave" &&
+      transaction.medium !== "paystack"
+    ) {
       const access_token = await authorizeOnSched();
       const headers = {
         Authorization: `Bearer ${access_token}`,
