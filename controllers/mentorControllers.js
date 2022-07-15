@@ -225,7 +225,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                 await transaction.save();
 
                 const msg = {
-                  to: email,
+                  to: transaction.customerEmail,
                   from: "support@oddience.co",
                   subject: "Booking Confirmed",
                   template_id: "d-1029e5cd14fd4224b459b64a2283dc84",
@@ -526,6 +526,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
       })[0];
       const transaction = await Transaction.create({
         customerName: fName + " " + lName,
+        customerEmail: email,
         token,
         mentor: mentor._id,
         onSchedAppointmentId: response.data.id,
