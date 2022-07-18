@@ -119,6 +119,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           lastWithdrawalPending: mentor.lastWithdrawalPending,
           lastWithdrawalFailed: mentor.lastWithdrawalFailed,
           bookings,
+          verified: mentor.verified ? true : false,
         },
       });
     });
@@ -241,7 +242,8 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   to: transaction.customerEmail,
                   from: "support@oddience.co",
                   subject: "Booking Confirmed",
-                  template_id: process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_CLIENT,
+                  template_id:
+                    process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_CLIENT,
                   dynamic_template_data: {
                     session_date,
                     session_time,
@@ -260,7 +262,8 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   to: mentor.email,
                   from: "support@oddience.co",
                   subject: "Booking Confirmed",
-                  template_id: process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_COACH,
+                  template_id:
+                    process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_COACH,
                   dynamic_template_data: {
                     session_date,
                     session_time,
@@ -620,7 +623,9 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           .format("DD-MM-YYYY");
 
         const session_time = new Date(
-          moment(new Date(startDateTime).toISOString()).tz("Africa/Lagos").format()
+          moment(new Date(startDateTime).toISOString())
+            .tz("Africa/Lagos")
+            .format()
         ).toTimeString();
 
         const msg = {
