@@ -241,7 +241,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   to: transaction.customerEmail,
                   from: "support@oddience.co",
                   subject: "Booking Confirmed",
-                  template_id: "d-1029e5cd14fd4224b459b64a2283dc84",
+                  template_id: process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_CLIENT,
                   dynamic_template_data: {
                     session_date,
                     session_time,
@@ -260,7 +260,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                   to: mentor.email,
                   from: "support@oddience.co",
                   subject: "Booking Confirmed",
-                  template_id: "d-0a46ef44506942c88b78672ffe2cd733",
+                  template_id: process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_COACH,
                   dynamic_template_data: {
                     session_date,
                     session_time,
@@ -685,7 +685,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           to: email,
           from: "support@oddience.co",
           subject: "Booking Reserved",
-          template_id: "d-04a786943e6742bea20f25e96aaa64f6",
+          template_id: process.env.MAIL_TEMPLATE_BOOKING_RESERVED,
           dynamic_template_data: {
             session_date: new Date(startDateTime).toLocaleDateString(),
             session_time: new Date(startDateTime).toLocaleTimeString(),

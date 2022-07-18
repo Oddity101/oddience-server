@@ -115,6 +115,11 @@ const coachSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  verifyToken: String,
 });
 
 coachSchema.pre("save", async function () {

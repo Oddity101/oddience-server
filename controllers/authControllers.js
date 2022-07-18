@@ -136,6 +136,13 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         capitalize(firstName),
         capitalize(lastName)
       );
+
+      const randomChar = await crypto.randomBytes(20).toString("hex");
+
+      const verifyToken = await crypto
+        .createHash("sha256")
+        .update(randomChar)
+        .digest("hex");
       const mentor = await Mentor.create({
         firstName,
         lastName,
@@ -150,14 +157,48 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         profileImageUrl,
         linkedInId,
         role,
+        verifyToken,
       });
 
-      const params = encodeURI(`${lastName.toLowerCase()}-${uniqueID[0]}`);
-      sendJwt(mentor, 200, res, params);
+      // Integration foor SendGrid Email
+      const msg = {
+        to: mentor.email,
+        from: "support@oddience.co",
+        subject: "Verify your account",
+        template_id: process.env.MAIL_TEMPLATE_VERIFY_ACCOUNT,
+        dynamic_template_data: {
+          url: `https://app.oddience.co/verify?token=${verifyToken}`,
+        },
+      };
+
+      await sendgridSendMail(msg)
+        .then(() => {
+          res.status(200).json({
+            success: true,
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          return next(new ErrorHandler("An error occurred", 500));
+        });
     })
     .catch((err) => {
       console.log(err);
     });
+});
+
+exports.verifyUser = catchAsyncErrors(async (req, res, next) => {
+  const mentor = await Mentor.findOne({ verifyToken: req.params.token });
+
+  if (!mentor) {
+    return next(new ErrorHandler("Invalid token", 400));
+  }
+
+  mentor.verified = true;
+
+  await mentor.save();
+
+  sendJwt(mentor, 200, res);
 });
 
 // /api/v1/mentor/login
@@ -268,7 +309,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     to: mentor.email,
     from: "support@oddience.co",
     subject: "Reset Password",
-    template_id: "d-7ba0111ab3a842eeb5288acb037aac98",
+    template_id: process.env.MAIL_TEMPLATE_FORGOT_PASSWORD,
     dynamic_template_data: {
       reset_link: `https://app.oddience.co/password/forgot?token=${resetToken}`,
     },
