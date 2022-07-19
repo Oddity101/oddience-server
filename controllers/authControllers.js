@@ -7,7 +7,6 @@ const createSIBContact = require("../utils/createSIBContact");
 const Mentor = require("../models/Mentor");
 const Skill = require("../models/Skill");
 const catchAsyncErrors = require("../utils/catchAsyncErrors");
-const sendMail = require("../utils/sendMail");
 const ErrorHandler = require("../utils/ErrorHandler");
 const sendJwt = require("../utils/sendJwt");
 const referralCodes = require("referral-codes");
@@ -167,7 +166,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         subject: "Verify your account",
         template_id: process.env.MAIL_TEMPLATE_VERIFY_ACCOUNT,
         dynamic_template_data: {
-          url: `https://app.oddience.co/verify?token=${verifyToken}`,
+          url: `https://app.oddience.co/success?token=${verifyToken}`,
         },
       };
 
@@ -231,7 +230,7 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
     const options = {
       grant_type: "authorization_code",
       code,
-      redirect_uri: "https://app.oddience.co",
+      redirect_uri: "https://oddience.co",
       client_id: process.env.LINKEDIN_CLIENT_ID,
       client_secret: process.env.LINKEDIN_CLIENT_SECRET,
     };
@@ -250,7 +249,6 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
       "https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))",
       {
         headers,
-        // projection:'(id,firstName,lastName,emailAddress,profilePicture(displayImage~:playableStreams))'
       }
     );
 
@@ -263,7 +261,6 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
     };
     const emailResponse = await axios.get(
       "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))",
-      // qs.stringify(emailOptions),
       { headers }
     );
     const email = emailResponse.data.elements[0]["handle~"].emailAddress;
@@ -326,25 +323,6 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
       return next(new ErrorHandler("An error occurred", 500));
     });
 
-  // Details of the mail to be sent to the user email
-  // const mailDetails = {
-  //   from: `"Oddience" <${process.env.EMAIL_ADDRESS}>`,
-  //   to: mentor.email,
-  //   subject: "Reset Password",
-  //   text: `Hey ${capitalize(
-  //     mentor.firstName
-  //   )}\nPlease click the link below to reset your password.(Note: This link expires in 10 minutes)\n\nhttps://app.oddience.co/password/forgot?token=${resetToken}\n\nIf you did not request for this mail please ignore this mail.\nThanks!`,
-  // };
-
-  // try {
-  //   await sendMail(mailDetails);
-  //   res.status(200).json({
-  //     success: true,
-  //   });
-  // } catch (err) {
-  //   console.log(err);
-  //   return next(new ErrorHandler("An error occurred", 500));
-  // }
 });
 
 // /ai/v1/password/reset/:token
