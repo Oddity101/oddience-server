@@ -69,7 +69,7 @@ exports.saveAccDetails = catchAsyncErrors(async (req, res, next) => {
         },
         {
           headers: {
-            Authorization: `Bearer sk_test_d6cff5dad14713760d3749719bb33985d80aba52`,
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
           },
         }
       )

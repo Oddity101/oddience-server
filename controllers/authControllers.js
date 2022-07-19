@@ -166,7 +166,9 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         subject: "Verify your account",
         template_id: process.env.MAIL_TEMPLATE_VERIFY_ACCOUNT,
         dynamic_template_data: {
-          url: `https://app.oddience.co/success?token=${verifyToken}`,
+          url: `https://${
+            process.env.NODE_ENV === "DEVELOPMENT" ? "dev." : ""
+          }oddience.co/success?token=${verifyToken}`,
         },
       };
 
@@ -230,7 +232,9 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
     const options = {
       grant_type: "authorization_code",
       code,
-      redirect_uri: "https://oddience.co",
+      redirect_uri: `https://${
+        process.env.NODE_ENV === "DEVELOPMENT" ? "dev." : ""
+      }oddience.co`,
       client_id: process.env.LINKEDIN_CLIENT_ID,
       client_secret: process.env.LINKEDIN_CLIENT_SECRET,
     };
@@ -308,7 +312,9 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     subject: "Reset Password",
     template_id: process.env.MAIL_TEMPLATE_FORGOT_PASSWORD,
     dynamic_template_data: {
-      reset_link: `https://app.oddience.co/password/forgot?token=${resetToken}`,
+      reset_link: `https://${
+        process.env.NODE_ENV === "DEVELOPMENT" ? "dev." : ""
+      }oddience.co/password/forgot?token=${resetToken}`,
     },
   };
 
@@ -322,7 +328,6 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
       console.log(err);
       return next(new ErrorHandler("An error occurred", 500));
     });
-
 });
 
 // /ai/v1/password/reset/:token
