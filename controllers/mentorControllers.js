@@ -564,7 +564,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           tx_ref: token,
           amount: mentor.pricePerSesh,
           currency: "USD",
-          redirect_url: `${process.env.FRONTEND_BASE_URL}/coach/${mentor.username}?token=${token}`,
+          redirect_url: `${process.env.FRONTEND_BASE_URL}/${mentor.username}?token=${token}`,
           customer: {
             email,
             name: `${capitalize(fName)} ${capitalize(lName)}}`,
@@ -670,8 +670,8 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
               quantity: 1,
             },
           ],
-          success_url: `${process.env.FRONTEND_BASE_URL}/coach/${req.body.username}?token=${token}`,
-          cancel_url: `${process.env.FRONTEND_BASE_URL}/coach/${
+          success_url: `${process.env.FRONTEND_BASE_URL}/${req.body.username}?token=${token}`,
+          cancel_url: `${process.env.FRONTEND_BASE_URL}/${
             req.body.username
           }?token=${"failed_transaction"}`,
           payment_intent_data: {
@@ -732,8 +732,8 @@ exports.createStripeConnectedAccount = catchAsyncErrors(
 
       const accountLink = await stripe.accountLinks.create({
         account: account.id,
-        refresh_url: `${process.env.FRONTEND_BASE_URL}/coach/dashboard`,
-        return_url: `${process.env.FRONTEND_BASE_URL}/coach/dashboard`,
+        refresh_url: `${process.env.FRONTEND_BASE_URL}/dashboard`,
+        return_url: `${process.env.FRONTEND_BASE_URL}/dashboard`,
         type: "account_onboarding",
       });
       res.status(200).json({
