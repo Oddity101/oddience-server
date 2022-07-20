@@ -760,7 +760,7 @@ exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
   };
 
   const uri = encodeURIComponent(
-    `${process.env.FRONTEND_BASE_URL}/coach/dashboard`
+    `${process.env.FRONTEND_BASE_URL}/dashboard`
   );
 
   await axios
