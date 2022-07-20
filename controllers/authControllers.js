@@ -63,6 +63,10 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     linkedInId,
     username,
   } = req.body;
+
+  if (!firstName || !laseName || !email || !bio || !username) {
+    return next(new ErrorHandler("Incomplete details", 400));
+  }
   firstName = firstName.trim().toLowerCase();
   lastName = lastName.trim().toLowerCase();
   email = email.trim();
@@ -166,9 +170,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         subject: "Verify your account",
         template_id: process.env.MAIL_TEMPLATE_VERIFY_ACCOUNT,
         dynamic_template_data: {
-          url: `https://${
-            process.env.NODE_ENV === "DEVELOPMENT" ? "dev." : ""
-          }oddience.co/success?token=${verifyToken}`,
+          url: `${process.env.FRONTEND_BASE_URL}/success?token=${verifyToken}`,
         },
       };
 
@@ -188,6 +190,38 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
+// /api/v1/mentor/resend/verify
+exports.resendVerificationMail = catchAsyncErrors(async (req, res, next) => {
+  const mentor = await Mentor.findOne({ verifyToken: req.query.verifyToken });
+
+  if (!mentor) {
+    return next(new ErrorHandler("User not found", 400));
+  }
+
+  // Integration foor SendGrid Email
+  const msg = {
+    to: mentor.email,
+    from: "support@oddience.co",
+    subject: "Verify your account",
+    template_id: process.env.MAIL_TEMPLATE_VERIFY_ACCOUNT,
+    dynamic_template_data: {
+      url: `${process.env.FRONTEND_BASE_URL}/success?token=${verifyToken}`,
+    },
+  };
+
+  await sendgridSendMail(msg)
+    .then(() => {
+      res.status(200).json({
+        success: true,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(new ErrorHandler("An error occurred", 500));
+    });
+});
+
+// /api/v1/mentor/verify
 exports.verifyUser = catchAsyncErrors(async (req, res, next) => {
   const mentor = await Mentor.findOne({ verifyToken: req.params.token });
 
@@ -232,9 +266,7 @@ exports.getLinkedInDetails = catchAsyncErrors(async (req, res, next) => {
     const options = {
       grant_type: "authorization_code",
       code,
-      redirect_uri: `https://${
-        process.env.NODE_ENV === "DEVELOPMENT" ? "dev." : ""
-      }oddience.co`,
+      redirect_uri: `${process.env.FRONTEND_BASE_URL}`,
       client_id: process.env.LINKEDIN_CLIENT_ID,
       client_secret: process.env.LINKEDIN_CLIENT_SECRET,
     };
@@ -312,9 +344,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     subject: "Reset Password",
     template_id: process.env.MAIL_TEMPLATE_FORGOT_PASSWORD,
     dynamic_template_data: {
-      reset_link: `https://${
-        process.env.NODE_ENV === "DEVELOPMENT" ? "dev." : ""
-      }oddience.co/password/forgot?token=${resetToken}`,
+      reset_link: `${process.env.FRONTEND_BASE_URL}/password/forgot?token=${resetToken}`,
     },
   };
 
