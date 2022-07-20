@@ -178,6 +178,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         .then(() => {
           res.status(200).json({
             success: true,
+            verifyToken,
           });
         })
         .catch((err) => {
