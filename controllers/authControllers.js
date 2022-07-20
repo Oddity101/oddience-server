@@ -64,7 +64,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     username,
   } = req.body;
 
-  if (!firstName || !laseName || !email || !bio || !username) {
+  if (!firstName || !lastName || !email || !bio || !username) {
     return next(new ErrorHandler("Incomplete details", 400));
   }
   firstName = firstName.trim().toLowerCase();
