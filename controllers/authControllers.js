@@ -138,7 +138,9 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         email,
         capitalize(firstName),
         capitalize(lastName)
-      );
+      ).catch((err) => {
+        console.log(err);
+      });
 
       const randomChar = await crypto.randomBytes(20).toString("hex");
 
