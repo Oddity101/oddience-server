@@ -274,6 +274,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                     client_last_name: capitalize(
                       transaction.customerName.split(" ")[1]
                     ),
+                    client_email: transaction.customerEmail,
                   },
                 };
 
@@ -355,6 +356,10 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
             return t.status === "paid";
           }).length
         : 0;
+
+      transaction = await Transaction.findOne({
+        token: req.query.token,
+      });
 
       res.status(200).json({
         success: true,
@@ -759,9 +764,7 @@ exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
     outlookCalendarId,
   };
 
-  const uri = encodeURIComponent(
-    `${process.env.FRONTEND_BASE_URL}/dashboard`
-  );
+  const uri = encodeURIComponent(`${process.env.FRONTEND_BASE_URL}/dashboard`);
 
   await axios
     .put(
