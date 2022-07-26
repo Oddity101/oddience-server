@@ -11,5 +11,6 @@ app.listen(process.env.PORT, () => {
 })
 
 app.get('/', async (req, res, next) => {
+    console.log(process.env);
     res.send('Online')
 })
