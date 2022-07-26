@@ -274,6 +274,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
                     client_last_name: capitalize(
                       transaction.customerName.split(" ")[1]
                     ),
+                    client_email: transaction.customerEmail,
                   },
                 };
 
@@ -355,6 +356,10 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
             return t.status === "paid";
           }).length
         : 0;
+
+      transaction = await Transaction.findOne({
+        token: req.query.token,
+      });
 
       res.status(200).json({
         success: true,
@@ -564,7 +569,7 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
           tx_ref: token,
           amount: mentor.pricePerSesh,
           currency: "USD",
-          redirect_url: `${process.env.FRONTEND_BASE_URL}/coach/${mentor.username}?token=${token}`,
+          redirect_url: `${process.env.FRONTEND_BASE_URL}/${mentor.username}?token=${token}`,
           customer: {
             email,
             name: `${capitalize(fName)} ${capitalize(lName)}}`,
@@ -670,8 +675,8 @@ exports.createAppointment = catchAsyncErrors(async (req, res, next) => {
               quantity: 1,
             },
           ],
-          success_url: `${process.env.FRONTEND_BASE_URL}/coach/${req.body.username}?token=${token}`,
-          cancel_url: `${process.env.FRONTEND_BASE_URL}/coach/${
+          success_url: `${process.env.FRONTEND_BASE_URL}/${req.body.username}?token=${token}`,
+          cancel_url: `${process.env.FRONTEND_BASE_URL}/${
             req.body.username
           }?token=${"failed_transaction"}`,
           payment_intent_data: {
@@ -732,8 +737,8 @@ exports.createStripeConnectedAccount = catchAsyncErrors(
 
       const accountLink = await stripe.accountLinks.create({
         account: account.id,
-        refresh_url: `${process.env.FRONTEND_BASE_URL}/coach/dashboard`,
-        return_url: `${process.env.FRONTEND_BASE_URL}/coach/dashboard`,
+        refresh_url: `${process.env.FRONTEND_BASE_URL}/dashboard`,
+        return_url: `${process.env.FRONTEND_BASE_URL}/dashboard`,
         type: "account_onboarding",
       });
       res.status(200).json({
@@ -759,9 +764,7 @@ exports.syncExternalCalendar = catchAsyncErrors(async (req, res, next) => {
     outlookCalendarId,
   };
 
-  const uri = encodeURIComponent(
-    `${process.env.FRONTEND_BASE_URL}/coach/dashboard`
-  );
+  const uri = encodeURIComponent(`${process.env.FRONTEND_BASE_URL}/dashboard`);
 
   await axios
     .put(

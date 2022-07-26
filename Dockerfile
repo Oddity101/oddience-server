@@ -12,6 +12,7 @@ RUN apk add g++ make py3-pip
 ENV NODE_ENV=production
 WORKDIR /app
 COPY . .
+COPY .env /app/config/config.env
 RUN yarn install --frozen-lockfile
 ENV HOST=0.0.0.0
 ENV PORT=5000

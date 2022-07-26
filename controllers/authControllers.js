@@ -64,7 +64,7 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
     username,
   } = req.body;
 
-  if (!firstName || !laseName || !email || !bio || !username) {
+  if (!firstName || !lastName || !email || !bio || !username) {
     return next(new ErrorHandler("Incomplete details", 400));
   }
   firstName = firstName.trim().toLowerCase();
@@ -138,7 +138,9 @@ exports.createUser = catchAsyncErrors(async (req, res, next) => {
         email,
         capitalize(firstName),
         capitalize(lastName)
-      );
+      ).catch((err) => {
+        console.log(err);
+      });
 
       const randomChar = await crypto.randomBytes(20).toString("hex");
 
@@ -224,7 +226,7 @@ exports.resendVerificationMail = catchAsyncErrors(async (req, res, next) => {
 
 // /api/v1/mentor/verify
 exports.verifyUser = catchAsyncErrors(async (req, res, next) => {
-  const mentor = await Mentor.findOne({ verifyToken: req.params.token });
+  const mentor = await Mentor.findOne({ verifyToken: req.body.token });
 
   if (!mentor) {
     return next(new ErrorHandler("Invalid token", 400));
