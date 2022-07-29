@@ -14,7 +14,7 @@ const {
 const router = express.Router();
 
 router.route("/user/new").post(createUser);
-router.route("/mentor/verify").post(verifyUser);
+router.route("/mentor/verify").put(verifyUser);
 router.route("/mentor/resend/verify").get(resendVerificationMail);
 router.route("/user/check/email").post(checkEmail);
 router.route("/user/check/username").post(checkUsername);

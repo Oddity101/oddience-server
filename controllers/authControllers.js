@@ -226,7 +226,7 @@ exports.resendVerificationMail = catchAsyncErrors(async (req, res, next) => {
 
 // /api/v1/mentor/verify
 exports.verifyUser = catchAsyncErrors(async (req, res, next) => {
-  const mentor = await Mentor.findOne({ verifyToken: req.body.token });
+  const mentor = await Mentor.findOne({ verifyToken: req.query.verifyToken });
 
   if (!mentor) {
     return next(new ErrorHandler("Invalid token", 400));
