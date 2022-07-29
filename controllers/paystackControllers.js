@@ -95,7 +95,7 @@ exports.saveAccDetails = catchAsyncErrors(async (req, res, next) => {
           business_name: fullName,
           settlement_bank: bank.code,
           account_number: accNo,
-          percentage_charge: 7.5,
+          percentage_charge: 0.75,
           description: `Oddience coach subaccount for ${fullName}`,
         },
         {

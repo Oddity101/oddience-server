@@ -9,6 +9,7 @@ const authorizeOnSched = require("../utils/authorizeOnSched");
 const { default: axios } = require("axios");
 const capitalize = require("../utils/capitalize");
 const sendgridSendMail = require("../utils/sendgridSendMail");
+const getLastDayOfWeek = require("../utils/getLastDayOfWeek");
 const Stripe = require("stripe");
 const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
 const initPaystackTransaction = require("../utils/initPaystackTransaction");
@@ -81,6 +82,26 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
             return t.status === "paid";
           }).length
         : 0;
+
+      const [lastDayOfWeek, firstDayOfWeek] = getLastDayOfWeek();
+
+      const balance = mentor.transactions
+        .filter((t) => {
+          return (
+            t.dateInitialized > firstDayOfWeek &&
+            t.dateInitialized < lastDayOfWeek &&
+            t.status === "paid"
+          );
+        })
+        .reduce((total, t) => {
+          return total + t.amount;
+        }, 0);
+
+      const totalBal = mentor.transactions
+        .filter((t) => t.status === "paid")
+        .reduce((total, t) => {
+          return total + t.amount;
+        }, 0);
       res.status(200).json({
         success: true,
         mentor: {
@@ -115,7 +136,11 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
           outlookCalendarId: response.data.outlookCalendarId,
           flutterwaveBankDetails: mentor.flutterwaveBankDetails,
           usingPaystack: mentor.usingPaystack,
-          paystackBankDetails: mentor.paystackBankDetails,
+          paystackBankDetails: {
+            ...mentor.paystackBankDetails,
+            balance,
+            totalBal,
+          },
           lastWithdrawalPending: mentor.lastWithdrawalPending,
           lastWithdrawalFailed: mentor.lastWithdrawalFailed,
           bookings,
