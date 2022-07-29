@@ -233,6 +233,7 @@ exports.verifyUser = catchAsyncErrors(async (req, res, next) => {
   }
 
   mentor.verified = true;
+  mentor.verifyToken = null;
 
   await mentor.save();
 
