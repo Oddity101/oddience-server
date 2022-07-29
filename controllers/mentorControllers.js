@@ -95,7 +95,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
         })
         .reduce((total, t) => {
           return total + t.amount;
-        }, 0);
+        }, 0) * 0.925;
 
       const totalBal = mentor.transactions
         .filter((t) => t.status === "paid")
