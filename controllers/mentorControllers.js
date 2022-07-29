@@ -107,7 +107,7 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
             .filter((t) => t.status === "paid")
             .reduce((total, t) => {
               return total + t.amount;
-            }, 0) * 0.975
+            }, 0) * 0.925
         ).toFixed(2)
       );
       res.status(200).json({
