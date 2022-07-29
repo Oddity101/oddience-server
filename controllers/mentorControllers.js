@@ -85,23 +85,31 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
 
       const [lastDayOfWeek, firstDayOfWeek] = getLastDayOfWeek();
 
-      const balance = mentor.transactions
-        .filter((t) => {
-          return (
-            t.dateInitialized > firstDayOfWeek &&
-            t.dateInitialized < lastDayOfWeek &&
-            t.status === "paid"
-          );
-        })
-        .reduce((total, t) => {
-          return total + t.amount;
-        }, 0) * 0.925;
+      const balance = Number(
+        (
+          mentor.transactions
+            .filter((t) => {
+              return (
+                t.dateInitialized > firstDayOfWeek &&
+                t.dateInitialized < lastDayOfWeek &&
+                t.status === "paid"
+              );
+            })
+            .reduce((total, t) => {
+              return total + t.amount;
+            }, 0) * 0.925
+        ).toFixed(2)
+      );
 
-      const totalBal = mentor.transactions
-        .filter((t) => t.status === "paid")
-        .reduce((total, t) => {
-          return total + t.amount;
-        }, 0);
+      const totalBal = Number(
+        (
+          mentor.transactions
+            .filter((t) => t.status === "paid")
+            .reduce((total, t) => {
+              return total + t.amount;
+            }, 0) * 0.975
+        ).toFixed(2)
+      );
       res.status(200).json({
         success: true,
         mentor: {
