@@ -13,6 +13,7 @@ const getLastDayOfWeek = require("../utils/getLastDayOfWeek");
 const Stripe = require("stripe");
 const stripe = Stripe(`${process.env.STRIPE_API_KEY}`);
 const initPaystackTransaction = require("../utils/initPaystackTransaction");
+const verifyTransaction = require("../utils/verifyTransaction");
 
 exports.getMentor = catchAsyncErrors(async (req, res, next) => {
   const mentor = req.user;
@@ -162,7 +163,15 @@ exports.getMentor = catchAsyncErrors(async (req, res, next) => {
 exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
   const tzOffset = String(req.query.tzOffset).replace("-", "+");
 
-  let transaction;
+  let transaction = await Transaction.findOne({
+    token: req.query.token,
+  });
+
+  let transactionSuccess;
+
+  if (transaction?.status === "paid") {
+    transactionSuccess = true;
+  }
   let appointmentError;
 
   const mentor = await Mentor.findOne({
@@ -173,11 +182,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
     return next(new ErrorHandler("Mentor does not exist", 400));
   }
 
-  if (req.query.token && req.query.token !== "failed_transcaction") {
-    transaction = await Transaction.findOne({
-      token: req.query.token,
-    });
-
+  if (req.query.token && transaction && transaction?.status !== "paid") {
     if (transaction.medium === "flutterwave") {
       if (
         req.query.transaction_status === "successful" &&
@@ -229,7 +234,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
     }
 
     if (transaction.medium === "paystack" && transaction.status !== "paid") {
-      axios
+      await axios
         .get(
           `https://api.paystack.co/transaction/verify/${transaction.token}`,
           {
@@ -243,84 +248,16 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
             paystackRes.data.data.status === "success" &&
             paystackRes.data.data.reference === transaction.token
           ) {
-            const access_token = await authorizeOnSched();
-            const headers = {
-              Authorization: `Bearer ${access_token}`,
-            };
+            const res = await verifyTransaction(
+              transaction,
+              mentor,
+              appointmentError
+            );
 
-            await axios
-              .put(
-                `https://api.onsched.com/consumer/v1/appointments/${transaction.onSchedAppointmentId}/book`,
-                {},
-                { headers }
-              )
-              .then(async () => {
-                transaction.status = "paid";
-
-                await transaction.save();
-
-                const session_date = moment(
-                  new Date(transaction.date).toISOString()
-                )
-                  .tz("Africa/Lagos")
-                  .format("DD-MM-YYYY");
-
-                const session_time = new Date(
-                  moment(new Date(transaction.date).toISOString())
-                    .tz("Africa/Lagos")
-                    .format()
-                ).toTimeString();
-
-                const msg = {
-                  to: transaction.customerEmail,
-                  from: "support@oddience.co",
-                  subject: "Booking Confirmed",
-                  template_id:
-                    process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_CLIENT,
-                  dynamic_template_data: {
-                    session_date,
-                    session_time,
-                    coach_first_name: capitalize(mentor.firstName),
-                    coach_last_name: capitalize(mentor.lastName),
-                  },
-                };
-
-                await sendgridSendMail(msg)
-                  .then(() => {})
-                  .catch((err) => {
-                    console.log(err);
-                  });
-
-                const msgCoach = {
-                  to: mentor.email,
-                  from: "support@oddience.co",
-                  subject: "Booking Confirmed",
-                  template_id:
-                    process.env.MAIL_TEMPLATE_BOOKING_CONFIRMED_COACH,
-                  dynamic_template_data: {
-                    session_date,
-                    session_time,
-                    coach_first_name: capitalize(mentor.firstName),
-                    client_first_name: capitalize(
-                      transaction.customerName.split(" ")[0]
-                    ),
-                    client_last_name: capitalize(
-                      transaction.customerName.split(" ")[1]
-                    ),
-                    client_email: transaction.customerEmail,
-                  },
-                };
-
-                await sendgridSendMail(msgCoach)
-                  .then(() => {})
-                  .catch((err) => {
-                    console.log(err);
-                  });
-              })
-              .catch((err) => {
-                console.log(err);
-                appointmentError = err;
-              });
+            if (res.err) {
+              appointmentError = res.err;
+            }
+            transaction = res.transaction;
           }
         });
     }
@@ -372,14 +309,6 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
       const availableDays = response.data.availableDays;
       const availableTimes = response.data.availableTimes;
 
-      // const { data } = await axios.get(
-      //   `https://api.onsched.com/consumer/v1/resources/${mentor.onSchedResourceID}`,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${accessToken}`,
-      //     },
-      //   }
-      // );
       const activeSkills = mentor.skills.filter((skill) => {
         return skill.status === "active";
       });
@@ -422,7 +351,7 @@ exports.getMentorDetails = catchAsyncErrors(async (req, res, next) => {
           usingFlutterwave: mentor.usingFlutterwave,
           usingPaystack: mentor.usingPaystack,
           appointmentError,
-          transaction,
+          transactionSuccess,
           bookings,
         },
       });

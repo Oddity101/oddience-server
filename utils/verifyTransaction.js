@@ -4,7 +4,7 @@ const authorizeOnSched = require("./authorizeOnSched");
 const capitalize = require("./capitalize");
 const sendgridSendMail = require("./sendgridSendMail");
 
-module.exports = async (transaction, mentor, appointmentError) => {
+module.exports = async (transaction, mentor) => {
   const access_token = await authorizeOnSched();
   const headers = {
     Authorization: `Bearer ${access_token}`,
@@ -71,11 +71,10 @@ module.exports = async (transaction, mentor, appointmentError) => {
           console.log(err);
         });
 
-      return transaction;
+      return { transaction };
     })
     .catch((err) => {
       console.log(err);
-      appointmentError = err;
-      return appointmentError;
+      return { err };
     });
 };

@@ -11,16 +11,13 @@ module.exports = catchAsyncErrors(async (req, res, next) => {
     }).populate("mentor");
 
     if (transaction.status !== "paid") {
-      verifyTransaction(transaction, transaction.mentor)
-        .then(async (trans) => {
-          transaction = trans;
+      const res = await verifyTransaction(transaction, transaction.mentor);
 
-          await transaction.save();
-        })
-        .catch((err) => {
-          console.log(err);
-          return next(new ErrorHandler("An error occurred", 500));
-        });
+      if (res.err) {
+        return next(new ErrorHandler("An error occurred", 500));
+      }
+
+      transaction = res.transaction;
     }
 
     res.status(200);
