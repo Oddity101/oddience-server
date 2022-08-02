@@ -24,7 +24,7 @@ module.exports = async (email, mentor) => {
         currency: "NGN",
         channels: ["card", "bank_transfer"],
         bearer: "subaccount",
-        sub_account:
+        subaccount:
           mentor.paystackBankDetails.subaccount_details.subaccount_code,
         callback_url: `${process.env.FRONTEND_BASE_URL}/${mentor.username}`,
       },
