@@ -1,16 +1,20 @@
 const axios = require("axios");
 
 module.exports = async (email, mentor) => {
-  const flwRes = await axios.get(
-    `https://api.flutterwave.com/v3/transfers/rates?amount=${mentor.pricePerSesh}&destination_currency=USD&source_currency=NGN`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
-      },
-    }
-  );
-
-  let { amount } = flwRes.data.data.source;
+  let amount = 0;
+  if(process.env.ONLY_NAIRA !== "true") {
+    const flwRes = await axios.get(
+      `https://api.flutterwave.com/v3/transfers/rates?amount=${mentor.pricePerSesh}&destination_currency=USD&source_currency=NGN`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+        },
+      }
+    );
+    amount  = flwRes.data.data.source;
+  }else {
+    amount   = mentor.pricePerSesh
+  }
 
   amount = (amount * 100).toFixed(0);
 
